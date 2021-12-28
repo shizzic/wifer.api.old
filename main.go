@@ -1,6 +1,9 @@
 package main
 
 import (
+	"math/rand"
+	"time"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -10,20 +13,41 @@ func main() {
 	r.POST("/registration", func(c *gin.Context) {
 		var data registrat
 		c.Bind(&data)
+
 		if err := Registration(data); err != nil {
-			c.String(500, err.Error())
+			c.String(400, err.Error())
 		} else {
 			c.JSON(200, "inserted")
 		}
 	})
 
 	r.GET("/test", func(c *gin.Context) {
-		c.String(200, "test")
+		rand.Seed(time.Now().UnixNano())
+
+		b := make([]byte, 64)
+		for i := range b {
+			b[i] = letters[rand.Int63()%int64(len(letters))]
+		}
+
+		c.String(200, string(b))
 	})
 
 	r.GET("/token", func(c *gin.Context) {
-		c.String(200, DecryptToken())
-		// c.String(200, EncryptToken("kotcich"))
+		token, err := c.Cookie("token")
+		if err != nil {
+			c.String(400, "token not found")
+		} else {
+			c.String(200, token)
+		}
+	})
+
+	// Ensure if user set HIS email or not
+	r.PUT("/ensure", func(c *gin.Context) {
+		if err := EnsureEmail(c.PostForm("username"), c.PostForm("token"), *c); err != nil {
+			c.String(400, err.Error())
+		} else {
+			c.String(200, "account activated")
+		}
 	})
 
 	run()

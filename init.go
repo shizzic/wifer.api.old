@@ -10,10 +10,11 @@ import (
 )
 
 var ctx = context.TODO()
-var r = gin.Default()                                 // https server (MAIN)
-var http = gin.Default()                              // http server
-var con = connect()                                   // database
-var users = con.Database("wifer").Collection("users") // users collection
+var r = gin.Default()    // https server (MAIN)
+var http = gin.Default() // http server
+var con = connect()      // database
+var users = con.Database("wifer").Collection("users")
+var ensure = con.Database("wifer").Collection("ensure")
 
 const uri string = "mongodb://shizzic:WebDev77@wifer-test.ru:27017/test?authSource=admin&readPreference=primary&appname=MongoDB%20Compass&directConnection=true&ssl=false"
 
@@ -47,7 +48,7 @@ func redirect() gin.HandlerFunc {
 
 func CORSMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		c.Header("Access-Control-Allow-Origin", "http://localhost:8080")
+		c.Header("Access-Control-Allow-Origin", "")
 		c.Header("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With")
 		c.Header("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT, DELETE")
 		c.Header("Access-Control-Allow-Credentials", "true")

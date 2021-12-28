@@ -2,7 +2,9 @@ package main
 
 import (
 	"errors"
+	"math/rand"
 	"regexp"
+	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"golang.org/x/crypto/bcrypt"
@@ -56,7 +58,7 @@ func Registration(data registrat) error {
 		return errors.New("incorrect body")
 	}
 
-	_, err := users.InsertOne(ctx, bson.D{
+	if _, err := users.InsertOne(ctx, bson.D{
 		{Key: "username", Value: data.Username},
 		{Key: "email", Value: data.Email},
 		{Key: "password_hash", Value: data.Password},
@@ -67,14 +69,21 @@ func Registration(data registrat) error {
 		{Key: "weight", Value: data.Weight},
 		{Key: "premium", Value: false},
 		{Key: "status", Value: false},
-	})
-
-	if err != nil {
+	}); err != nil {
 		return errors.New("document not inserted")
 	}
 
-	if err := SendVerifyEmail(data.Username, data.Email); err != nil {
-		return errors.New("could not send message to your email")
+	token := generateTokenForEmail()
+
+	if _, err := ensure.InsertOne(ctx, bson.D{
+		{Key: "_id", Value: data.Username},
+		{Key: "token", Value: token},
+	}); err != nil {
+		return errors.New("document not inserted")
+	}
+
+	if err := SendVerifyEmail(data.Username, data.Email, token); err != nil {
+		return errors.New("couldn't send message to your email")
 	}
 
 	return nil
@@ -132,4 +141,16 @@ func isWeightValid(weight uint8) bool {
 // Check body on valid
 func isBodyValid(body uint8) bool {
 	return body < 1 || body > 7
+}
+
+// make token for EnsureEmail
+func generateTokenForEmail() string {
+	rand.Seed(time.Now().UnixNano())
+
+	b := make([]byte, 64)
+	for i := range b {
+		b[i] = letters[rand.Int63()%int64(len(letters))]
+	}
+
+	return string(b)
 }

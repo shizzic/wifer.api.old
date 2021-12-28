@@ -5,9 +5,8 @@ import (
 	"time"
 )
 
-var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+const letters = "1234567890[]!$#%-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
-// 33 to 126. Space not allowed
 func EncryptToken(username string) (token string) {
 	for i, char := range username {
 		if char%2 == 0 {
@@ -18,9 +17,9 @@ func EncryptToken(username string) (token string) {
 
 		rand.Seed(time.Now().UnixNano())
 
-		b := make([]rune, i)
-		for k := range b {
-			b[k] = letters[rand.Intn(len(letters))]
+		b := make([]byte, i)
+		for i := range b {
+			b[i] = letters[rand.Int63()%int64(len(letters))]
 		}
 
 		token += string(b)
