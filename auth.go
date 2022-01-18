@@ -3,6 +3,8 @@ package main
 import (
 	"math/rand"
 	"time"
+
+	"github.com/gin-gonic/gin"
 )
 
 const letters = "1234567890[]!$#%-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
@@ -28,9 +30,8 @@ func EncryptToken(username string) (token string) {
 	return
 }
 
-// 30 ms speed average with simple request
-func DecryptToken() (username string) {
-	token := "lpjsRidNrjjHKJSdTywosgbNuRld"
+// 30 ms speed average
+func DecryptToken(token string) (username string) {
 	key := 0
 	minus := 0
 
@@ -48,4 +49,19 @@ func DecryptToken() (username string) {
 	}
 
 	return
+}
+
+// check if user loged in
+func Auth() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		if token, err := c.Cookie("token"); err == nil {
+			if username, e := c.Cookie("username"); e == nil {
+				if DecryptToken(token) == username {
+					c.Next()
+				}
+			}
+		}
+
+		c.AbortWithStatus(401)
+	}
 }
