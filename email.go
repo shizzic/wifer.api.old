@@ -79,3 +79,15 @@ func InfoAboutDelete(email, username string) {
 	d.TLSConfig = &tls.Config{InsecureSkipVerify: true}
 	d.DialAndSend(m)
 }
+
+// Tell user that his password was changed
+func InfoAboutPasswordChange(email, username string) {
+	m := gomail.NewMessage()
+	m.SetHeader("From", "admin@wifer-test.ru")
+	m.SetHeader("To", email)
+	m.SetHeader("Subject", "Password change")
+	m.SetBody("text/html", "<p>Hello dear <b>"+username+"</b>. Your password was successfully changed")
+	d := gomail.NewDialer("skvmrelay.netangels.ru", 25, "admin@wifer-test.ru", "jukdNRaVWf3Fvmg")
+	d.TLSConfig = &tls.Config{InsecureSkipVerify: true}
+	d.DialAndSend(m)
+}

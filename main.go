@@ -54,6 +54,15 @@ func main() {
 		}
 	})
 
+	// Password change
+	r.PUT("/changePassword", Auth(), func(c *gin.Context) {
+		if err := ChangePassword(c.PostForm("old"), c.PostForm("new"), *c); err != nil {
+			c.String(400, err.Error())
+		} else {
+			c.String(200, "password changed")
+		}
+	})
+
 	r.GET("/test", Auth(), func(c *gin.Context) {
 		c.String(200, "some")
 	})
