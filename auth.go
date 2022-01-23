@@ -1,10 +1,14 @@
 package main
 
 import (
+	"errors"
+	"fmt"
 	"math/rand"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/bson"
+	"golang.org/x/crypto/bcrypt"
 )
 
 const letters = "1234567890[]!$#%-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
@@ -58,10 +62,39 @@ func Auth() gin.HandlerFunc {
 			if username, e := c.Cookie("username"); e == nil {
 				if DecryptToken(token) == username {
 					c.Next()
+					return
 				}
 			}
 		}
 
 		c.AbortWithStatus(401)
 	}
+}
+
+func Login(email, password string, c gin.Context) error {
+	var user bson.M
+	if err := users.FindOne(ctx, bson.M{"email": email}).Decode(&user); err != nil {
+		return errors.New("document not inserted")
+	}
+
+	// Verify password
+	if err := ComparePassword(fmt.Sprint(user["password_hash"]), password); err != nil {
+		return errors.New("wrong password")
+	}
+
+	// create cookies
+	var username string = fmt.Sprint(user["username"])
+	c.SetCookie("token", EncryptToken(username), 120, "/", "https://wifer-test.ru", true, true)
+	c.SetCookie("username", username, 120, "/", "https://wifer-test.ru", true, true)
+
+	return nil
+}
+
+// Compare password from client side and database side
+func ComparePassword(hash, password string) error {
+	if err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password)); err != nil {
+		return errors.New("wrong password")
+	}
+
+	return nil
 }

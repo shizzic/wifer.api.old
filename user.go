@@ -6,7 +6,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
-	"golang.org/x/crypto/bcrypt"
 )
 
 // Delete account only from client side
@@ -17,8 +16,7 @@ func DeleteAccount(username, password string, c gin.Context) error {
 	}
 
 	// Verify password
-	var hash string = fmt.Sprint(account["password_hash"])
-	if err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password)); err != nil {
+	if err := ComparePassword(fmt.Sprint(account["password_hash"]), password); err != nil {
 		return errors.New("account not deleted")
 	}
 

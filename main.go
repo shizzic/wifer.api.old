@@ -37,7 +37,7 @@ func main() {
 	})
 
 	// Ensure if user set HIS email or not
-	r.DELETE("/deleteAccount", func(c *gin.Context) {
+	r.DELETE("/deleteAccount", Auth(), func(c *gin.Context) {
 		if err := DeleteAccount(c.PostForm("username"), c.PostForm("password"), *c); err != nil {
 			c.String(400, err.Error())
 		} else {
@@ -45,12 +45,17 @@ func main() {
 		}
 	})
 
-	r.GET("/test", Auth(), func(c *gin.Context) {
-		c.String(200, "some")
+	// Just login
+	r.POST("/login", func(c *gin.Context) {
+		if err := Login(c.PostForm("email"), c.PostForm("password"), *c); err != nil {
+			c.String(401, err.Error())
+		} else {
+			c.String(200, "loged in")
+		}
 	})
 
-	r.GET("/token", func(c *gin.Context) {
-
+	r.GET("/test", Auth(), func(c *gin.Context) {
+		c.String(200, "some")
 	})
 
 	run()
