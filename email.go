@@ -91,3 +91,18 @@ func InfoAboutPasswordChange(email, username string) {
 	d.TLSConfig = &tls.Config{InsecureSkipVerify: true}
 	d.DialAndSend(m)
 }
+
+// Send link to new user's email
+func SendChangeEmail(oldEmail, newEmail, username string) {
+	token := MakeToken()
+	ensure.InsertOne(ctx, bson.D{{Key: "_id", Value: username}, {Key: "token", Value: token}})
+
+	m := gomail.NewMessage()
+	m.SetHeader("From", "admin@wifer-test.ru")
+	m.SetHeader("To", newEmail)
+	m.SetHeader("Subject", "Password change")
+	m.SetBody("text/html", "<p>Hello dear <b>"+username+"</b>. Just follow link below to confirm your new email.</p><a href='https://wifer.ru/changePassword/"+username+"/"+token+"/"+newEmail+"'>Confirm</a>")
+	d := gomail.NewDialer("skvmrelay.netangels.ru", 25, "admin@wifer-test.ru", "jukdNRaVWf3Fvmg")
+	d.TLSConfig = &tls.Config{InsecureSkipVerify: true}
+	d.DialAndSend(m)
+}

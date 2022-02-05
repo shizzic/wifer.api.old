@@ -71,6 +71,7 @@ func Auth() gin.HandlerFunc {
 	}
 }
 
+// Login for Form from client side. Yea, i'm lil dick :D
 func Login(email, password string, c gin.Context) error {
 	var user bson.M
 	if err := users.FindOne(ctx, bson.M{"email": email}).Decode(&user); err != nil {
@@ -97,4 +98,16 @@ func ComparePassword(hash, password string) error {
 	}
 
 	return nil
+}
+
+// Make token for auth any email operations or something :)
+func MakeToken() string {
+	rand.Seed(time.Now().UnixNano())
+
+	b := make([]byte, 64)
+	for i := range b {
+		b[i] = letters[rand.Int63()%int64(len(letters))]
+	}
+
+	return string(b)
 }

@@ -9,6 +9,21 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+// Change user's email only from clien't side
+func ChangeEmail(username, token, newEmail string, c gin.Context) error {
+	if r, err := ensure.DeleteOne(ctx, bson.M{"_id": username, "token": token}); err != nil || r.DeletedCount == 0 {
+		return errors.New("not found")
+	}
+
+	if r, err := users.UpdateOne(ctx, bson.M{"username": username}, bson.D{
+		{Key: "$set", Value: bson.D{{Key: "email", Value: newEmail}}},
+	}); err != nil || r.ModifiedCount == 0 {
+		return errors.New("something went wrong, try again later")
+	}
+
+	return nil
+}
+
 // Change password only from client side
 func ChangePassword(old, new string, c gin.Context) error {
 	var user bson.M

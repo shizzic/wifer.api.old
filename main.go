@@ -63,6 +63,20 @@ func main() {
 		}
 	})
 
+	// Send link to new user's email
+	r.POST("/sendChangeEmail", Auth(), func(c *gin.Context) {
+		SendChangeEmail(c.PostForm("old"), c.PostForm("new"), c.PostForm("username"))
+	})
+
+	// Email change
+	r.PUT("/changeEmail", func(c *gin.Context) {
+		if err := ChangeEmail(c.PostForm("username"), c.PostForm("token"), c.PostForm("new"), *c); err != nil {
+			c.String(400, err.Error())
+		} else {
+			c.String(200, "email changed")
+		}
+	})
+
 	r.GET("/test", Auth(), func(c *gin.Context) {
 		c.String(200, "some")
 	})
