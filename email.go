@@ -18,7 +18,7 @@ import (
 
 func SendVerifyEmail(username, to, token string) error {
 	m := gomail.NewMessage()
-	m.SetHeader("From", "admin@wifer-test.ru")
+	m.SetHeader("From", "Wifer <admin@wifer-test.ru>")
 	m.SetHeader("To", to)
 	m.SetHeader("Subject", "Confirm registration")
 	m.SetBody("text/html", "<p>Hello dear <b>"+username+"</b>. To verify your account, just follow this link<p><a href='https://wifer.ru/ensure/"+username+"/"+token+"'>Verfy your account</a></p></p><p>If you don't signed up on Wifer, than, just follow this link for removing your personal data from service:<br><a href='https://wifer.ru/ensureDelete/"+username+"/"+token+"'>Permanently delete your data</a></p>")
@@ -71,7 +71,7 @@ func EnsureDelete(username, token string) error {
 // Tell user that his account has been deleted
 func InfoAboutDelete(email, username string) {
 	m := gomail.NewMessage()
-	m.SetHeader("From", "admin@wifer-test.ru")
+	m.SetHeader("From", "Wifer <admin@wifer-test.ru>")
 	m.SetHeader("To", email)
 	m.SetHeader("Subject", "Account removing")
 	m.SetBody("text/html", "<p>Hello dear <b>"+username+"</b>. Your account deleted successfully!")
@@ -83,7 +83,7 @@ func InfoAboutDelete(email, username string) {
 // Tell user that his password was changed
 func InfoAboutPasswordChange(email, username string) {
 	m := gomail.NewMessage()
-	m.SetHeader("From", "admin@wifer-test.ru")
+	m.SetHeader("From", "Wifer <admin@wifer-test.ru>")
 	m.SetHeader("To", email)
 	m.SetHeader("Subject", "Password change")
 	m.SetBody("text/html", "<p>Hello dear <b>"+username+"</b>. Your password was successfully changed")
@@ -98,7 +98,7 @@ func SendChangeEmail(oldEmail, newEmail, username string) {
 	ensure.InsertOne(ctx, bson.D{{Key: "_id", Value: username}, {Key: "token", Value: token}})
 
 	m := gomail.NewMessage()
-	m.SetHeader("From", "admin@wifer-test.ru")
+	m.SetHeader("From", "Wifer <admin@wifer-test.ru>")
 	m.SetHeader("To", newEmail)
 	m.SetHeader("Subject", "Password change")
 	m.SetBody("text/html", "<p>Hello dear <b>"+username+"</b>. Just follow link below to confirm your new email.</p><a href='https://wifer.ru/changePassword/"+username+"/"+token+"/"+newEmail+"'>Confirm</a>")

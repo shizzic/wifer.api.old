@@ -75,7 +75,7 @@ func Auth() gin.HandlerFunc {
 func Login(email, password string, c gin.Context) error {
 	var user bson.M
 	if err := users.FindOne(ctx, bson.M{"email": email}).Decode(&user); err != nil {
-		return errors.New("document not inserted")
+		return errors.New("document not found")
 	}
 
 	// Verify password
