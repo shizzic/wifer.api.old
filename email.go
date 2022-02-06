@@ -11,17 +11,19 @@ import (
 	"gopkg.in/gomail.v2"
 )
 
+var domain string = "https://wifer.ru"
+
 // cookie, err := c.Cookie("token")
 // c.SetSameSite(4)
 // c.SetSameSite(h.SameSiteNoneMode)
 // c.SetCookie("token", "here'll be token", 120, "/", "https://wifer-test.ru", true, true)
 
-func SendVerifyEmail(username, to, token string) error {
+func SendVerifyEmail(username, to, token, id string) error {
 	m := gomail.NewMessage()
 	m.SetHeader("From", "Wifer <admin@wifer-test.ru>")
 	m.SetHeader("To", to)
 	m.SetHeader("Subject", "Confirm registration")
-	m.SetBody("text/html", "<p>Hello dear <b>"+username+"</b>. To verify your account, just follow this link<p><a href='https://wifer.ru/ensure/"+username+"/"+token+"'>Verfy your account</a></p></p><p>If you don't signed up on Wifer, than, just follow this link for removing your personal data from service:<br><a href='https://wifer.ru/ensureDelete/"+username+"/"+token+"'>Permanently delete your data</a></p>")
+	m.SetBody("text/html", "<p>Hello dear <b>"+username+"</b>. To verify your account, just follow this link<p><a href='"+domain+"/ensure/"+username+"/"+token+"/"+id+"'>Verfy your account</a></p></p><p>If you don't signed up on Wifer, than, just follow this link for removing your personal data from service:<br><a href='"+domain+"/ensureDelete/"+id+"/"+token+"'>Permanently delete your account</a></p>")
 	d := gomail.NewDialer("skvmrelay.netangels.ru", 25, "admin@wifer-test.ru", "jukdNRaVWf3Fvmg")
 	d.TLSConfig = &tls.Config{InsecureSkipVerify: true}
 
@@ -33,12 +35,12 @@ func SendVerifyEmail(username, to, token string) error {
 }
 
 // Activate user's account
-func EnsureEmail(username, token string, c gin.Context) error {
-	if r, err := ensure.DeleteOne(ctx, bson.M{"_id": username, "token": token}); err != nil || r.DeletedCount == 0 {
+func EnsureEmail(username, token, id string, c gin.Context) error {
+	if r, err := ensure.DeleteOne(ctx, bson.M{"_id": id, "token": token}); err != nil || r.DeletedCount == 0 {
 		return errors.New("not found")
 	}
 
-	if r, err := users.UpdateOne(ctx, bson.M{"username": username}, bson.D{
+	if r, err := users.UpdateOne(ctx, bson.M{"_id": id}, bson.D{
 		{Key: "$set", Value: bson.D{{Key: "status", Value: true}}},
 	}); err != nil || r.ModifiedCount == 0 {
 		return errors.New("document not updated")
@@ -47,21 +49,22 @@ func EnsureEmail(username, token string, c gin.Context) error {
 	c.SetSameSite(h.SameSiteNoneMode)
 	c.SetCookie("token", EncryptToken(username), 120, "/", "wifer-test.ru", true, true)
 	c.SetCookie("username", username, 120, "/", "wifer-test.ru", true, true)
+	c.SetCookie("id", id, 120, "/", "wifer-test.ru", true, true)
 
 	return nil
 }
 
 // Delete all user's data, if it triggered by link from email
-func EnsureDelete(username, token string) error {
-	if r, err := ensure.DeleteOne(ctx, bson.M{"_id": username, "token": token}); err != nil || r.DeletedCount == 0 {
-		return errors.New("error")
+func EnsureDelete(id, token string) error {
+	if r, err := ensure.DeleteOne(ctx, bson.M{"_id": id, "token": token}); err != nil || r.DeletedCount == 0 {
+		return errors.New("error 1")
 	}
 
-	if _, err := about.DeleteOne(ctx, bson.M{"_id": username}); err != nil {
-		return errors.New("error")
+	if _, err := about.DeleteOne(ctx, bson.M{"_id": id}); err != nil {
+		return errors.New("error 2")
 	}
 
-	if r, err := users.DeleteOne(ctx, bson.M{"username": username}); err != nil || r.DeletedCount == 0 {
+	if r, err := users.DeleteOne(ctx, bson.M{"_id": id}); err != nil || r.DeletedCount == 0 {
 		return errors.New("error")
 	}
 
@@ -93,15 +96,16 @@ func InfoAboutPasswordChange(email, username string) {
 }
 
 // Send link to new user's email
-func SendChangeEmail(oldEmail, newEmail, username string) {
+func SendChangeEmail(oldEmail, newEmail, username string, c gin.Context) {
+	id, _ := c.Cookie("id")
 	token := MakeToken()
-	ensure.InsertOne(ctx, bson.D{{Key: "_id", Value: username}, {Key: "token", Value: token}})
+	ensure.InsertOne(ctx, bson.D{{Key: "_id", Value: id}, {Key: "token", Value: token}})
 
 	m := gomail.NewMessage()
 	m.SetHeader("From", "Wifer <admin@wifer-test.ru>")
 	m.SetHeader("To", newEmail)
 	m.SetHeader("Subject", "Password change")
-	m.SetBody("text/html", "<p>Hello dear <b>"+username+"</b>. Just follow link below to confirm your new email.</p><a href='https://wifer.ru/changePassword/"+username+"/"+token+"/"+newEmail+"'>Confirm</a>")
+	m.SetBody("text/html", "<p>Hello dear <b>"+username+"</b>. Just follow link below to confirm your new email.</p><a href='"+domain+"/changePassword/"+id+"/"+token+"/"+newEmail+"'>Confirm</a>")
 	d := gomail.NewDialer("skvmrelay.netangels.ru", 25, "admin@wifer-test.ru", "jukdNRaVWf3Fvmg")
 	d.TLSConfig = &tls.Config{InsecureSkipVerify: true}
 	d.DialAndSend(m)

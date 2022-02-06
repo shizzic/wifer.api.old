@@ -2,7 +2,9 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"regexp"
+	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"golang.org/x/crypto/bcrypt"
@@ -56,7 +58,12 @@ func Registration(data registrat) error {
 		return errors.New("incorrect body")
 	}
 
-	if _, err := users.InsertOne(ctx, bson.D{
+	// Count all users for make unique id
+	count, _ := users.CountDocuments(ctx, bson.D{})
+	count++
+
+	ObjectId, err := users.InsertOne(ctx, bson.D{
+		{Key: "_id", Value: fmt.Sprint(count)},
 		{Key: "username", Value: data.Username},
 		{Key: "email", Value: data.Email},
 		{Key: "password_hash", Value: data.Password},
@@ -67,20 +74,23 @@ func Registration(data registrat) error {
 		{Key: "weight", Value: data.Weight},
 		{Key: "premium", Value: false},
 		{Key: "status", Value: false},
-	}); err != nil {
+		{Key: "created_at", Value: time.Now().Unix()},
+	})
+
+	if err != nil {
 		return errors.New("document not inserted")
 	}
 
 	token := MakeToken()
 
 	if _, err := ensure.InsertOne(ctx, bson.D{
-		{Key: "_id", Value: data.Username},
+		{Key: "_id", Value: ObjectId.InsertedID},
 		{Key: "token", Value: token},
 	}); err != nil {
 		return errors.New("document not inserted")
 	}
 
-	if err := SendVerifyEmail(data.Username, data.Email, token); err != nil {
+	if err := SendVerifyEmail(data.Username, data.Email, token, fmt.Sprint(ObjectId.InsertedID)); err != nil {
 		return errors.New("couldn't send message to your email")
 	}
 

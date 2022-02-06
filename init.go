@@ -17,6 +17,8 @@ var users = con.Database("wifer").Collection("users")
 var ensure = con.Database("wifer").Collection("ensure")
 var about = con.Database("wifer").Collection("about")
 
+// var views = con.Database("wifer").Collection("views")
+
 const uri string = "mongodb://shizzic:WebDev77@wifer-test.ru:27017/test?authSource=admin&readPreference=primary&appname=MongoDB%20Compass&directConnection=true&ssl=false"
 
 func connect() *mongo.Client {

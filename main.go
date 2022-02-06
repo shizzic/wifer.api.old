@@ -20,7 +20,7 @@ func main() {
 
 	// Ensure if user set HIS email or not
 	r.PUT("/ensure", func(c *gin.Context) {
-		if err := EnsureEmail(c.PostForm("username"), c.PostForm("token"), *c); err != nil {
+		if err := EnsureEmail(c.PostForm("username"), c.PostForm("token"), c.PostForm("id"), *c); err != nil {
 			c.String(400, err.Error())
 		} else {
 			c.String(200, "account activated")
@@ -29,7 +29,7 @@ func main() {
 
 	// Ensure if user set HIS email or not
 	r.DELETE("/ensureDelete", func(c *gin.Context) {
-		if err := EnsureDelete(c.PostForm("username"), c.PostForm("token")); err != nil {
+		if err := EnsureDelete(c.PostForm("id"), c.PostForm("token")); err != nil {
 			c.String(400, err.Error())
 		} else {
 			c.String(200, "account deleted")
@@ -38,7 +38,7 @@ func main() {
 
 	// Ensure if user set HIS email or not
 	r.DELETE("/deleteAccount", Auth(), func(c *gin.Context) {
-		if err := DeleteAccount(c.PostForm("username"), c.PostForm("password"), *c); err != nil {
+		if err := DeleteAccount(c.PostForm("password"), *c); err != nil {
 			c.String(400, err.Error())
 		} else {
 			c.String(200, "account deleted")
@@ -65,12 +65,12 @@ func main() {
 
 	// Send link to new user's email
 	r.POST("/sendChangeEmail", Auth(), func(c *gin.Context) {
-		SendChangeEmail(c.PostForm("old"), c.PostForm("new"), c.PostForm("username"))
+		SendChangeEmail(c.PostForm("old"), c.PostForm("new"), c.PostForm("username"), *c)
 	})
 
 	// Email change
 	r.PUT("/changeEmail", func(c *gin.Context) {
-		if err := ChangeEmail(c.PostForm("username"), c.PostForm("token"), c.PostForm("new"), *c); err != nil {
+		if err := ChangeEmail(c.PostForm("id"), c.PostForm("token"), c.PostForm("new"), *c); err != nil {
 			c.String(400, err.Error())
 		} else {
 			c.String(200, "email changed")

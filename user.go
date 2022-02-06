@@ -10,12 +10,12 @@ import (
 )
 
 // Change user's email only from clien't side
-func ChangeEmail(username, token, newEmail string, c gin.Context) error {
-	if r, err := ensure.DeleteOne(ctx, bson.M{"_id": username, "token": token}); err != nil || r.DeletedCount == 0 {
+func ChangeEmail(id, token, newEmail string, c gin.Context) error {
+	if r, err := ensure.DeleteOne(ctx, bson.M{"_id": id, "token": token}); err != nil || r.DeletedCount == 0 {
 		return errors.New("not found")
 	}
 
-	if r, err := users.UpdateOne(ctx, bson.M{"username": username}, bson.D{
+	if r, err := users.UpdateOne(ctx, bson.M{"_id": id}, bson.D{
 		{Key: "$set", Value: bson.D{{Key: "email", Value: newEmail}}},
 	}); err != nil || r.ModifiedCount == 0 {
 		return errors.New("something went wrong, try again later")
@@ -55,8 +55,10 @@ func ChangePassword(old, new string, c gin.Context) error {
 }
 
 // Delete account only from client side
-func DeleteAccount(username, password string, c gin.Context) error {
+func DeleteAccount(password string, c gin.Context) error {
+	username, _ := c.Cookie("username")
 	var user bson.M
+
 	if err := users.FindOne(ctx, bson.M{"username": username}).Decode(&user); err != nil {
 		return errors.New("account not deleted")
 	}

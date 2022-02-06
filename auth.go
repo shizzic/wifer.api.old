@@ -87,6 +87,7 @@ func Login(email, password string, c gin.Context) error {
 	var username string = fmt.Sprint(user["username"])
 	c.SetCookie("token", EncryptToken(username), 120, "/", "https://wifer-test.ru", true, true)
 	c.SetCookie("username", username, 120, "/", "https://wifer-test.ru", true, true)
+	c.SetCookie("id", fmt.Sprint(user["_id"]), 120, "/", "https://wifer-test.ru", true, true)
 
 	return nil
 }
