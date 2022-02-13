@@ -78,6 +78,11 @@ func Login(email, password string, c gin.Context) error {
 		return errors.New("document not found")
 	}
 
+	// Check if user ever ensure his account or ever been deleted
+	if user["status"] == false {
+		return errors.New("bad status")
+	}
+
 	// Verify password
 	if err := ComparePassword(fmt.Sprint(user["password_hash"]), password); err != nil {
 		return errors.New("wrong password")

@@ -10,75 +10,48 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-// Struct of new user
-type registrat struct {
-	Username string `form:"username"`
-	Code     string `form:"countryCode"`
-	Email    string `form:"email"`
-	Password string `form:"password"`
-	Title    string `form:"title"`
-	Age      uint8  `form:"age"`
-	Height   uint8  `form:"height"`
-	Weight   uint8  `form:"weight"`
-	Body     uint8  `form:"body"`
-}
-
-// Check each value from POST form on correct format.
-// Return either success message or error
-func Registration(data registrat) error {
-	if isUsernameValid(data.Username) {
+func Registration(data user) error {
+	if IsUsernameValid(data.Username) {
 		return errors.New("incorrect username")
 	}
 
-	if !isEmailValid(data.Email) {
+	if !IsEmailValid(data.Email) {
 		return errors.New("incorrect email")
 	}
 
-	if !isPasswordValid(&data.Password) {
+	if !IsPasswordValid(&data.Password) {
 		return errors.New("incorrect password")
 	}
 
-	if isTitleValid(data.Title) {
-		return errors.New("incorrect title")
-	}
-
-	if isAgeValid(data.Age) {
-		return errors.New("incorrect age")
-	}
-
-	if isHeightValid(data.Height) {
-		return errors.New("incorrect height")
-	}
-
-	if isWeightValid(data.Weight) {
-		return errors.New("incorrect weight")
-	}
-
-	if isBodyValid(data.Body) {
-		return errors.New("incorrect body")
-	}
-
-	// Count all users for make unique id
-	count, _ := users.CountDocuments(ctx, bson.D{})
-	count++
+	// Count all users for make unique id and than
+	id, _ := users.CountDocuments(ctx, bson.D{})
+	id += time.Now().Unix()
 
 	ObjectId, err := users.InsertOne(ctx, bson.D{
-		{Key: "_id", Value: fmt.Sprint(count)},
+		{Key: "_id", Value: fmt.Sprint(id)},
 		{Key: "username", Value: data.Username},
 		{Key: "email", Value: data.Email},
 		{Key: "password_hash", Value: data.Password},
 		{Key: "title", Value: data.Title},
+		{Key: "sex", Value: data.Sex},
 		{Key: "age", Value: data.Age},
 		{Key: "body", Value: data.Body},
 		{Key: "height", Value: data.Height},
 		{Key: "weight", Value: data.Weight},
+		{Key: "smokes", Value: data.Smokes},
+		{Key: "drinks", Value: data.Drinks},
+		{Key: "ethnicity", Value: data.Ethnicity},
+		{Key: "search", Value: data.Search},
+		{Key: "income", Value: data.Income},
+		{Key: "children", Value: data.Children},
+		{Key: "industry", Value: data.Industry},
 		{Key: "premium", Value: false},
 		{Key: "status", Value: false},
 		{Key: "created_at", Value: time.Now().Unix()},
 	})
 
 	if err != nil {
-		return errors.New("document not inserted")
+		return errors.New("user not inserted")
 	}
 
 	token := MakeToken()
@@ -87,7 +60,7 @@ func Registration(data registrat) error {
 		{Key: "_id", Value: ObjectId.InsertedID},
 		{Key: "token", Value: token},
 	}); err != nil {
-		return errors.New("document not inserted")
+		return errors.New("ensure not inserted")
 	}
 
 	if err := SendVerifyEmail(data.Username, data.Email, token, fmt.Sprint(ObjectId.InsertedID)); err != nil {
@@ -98,7 +71,7 @@ func Registration(data registrat) error {
 }
 
 // Check email on valid
-func isEmailValid(email string) bool {
+func IsEmailValid(email string) bool {
 	if len(email) < 3 || len(email) > 254 {
 		return false
 	}
@@ -107,7 +80,7 @@ func isEmailValid(email string) bool {
 }
 
 // Check password on valid length and do hash
-func isPasswordValid(password *string) bool {
+func IsPasswordValid(password *string) bool {
 	if len(*password) < 8 || len(*password) > 128 {
 		return false
 	}
@@ -118,35 +91,10 @@ func isPasswordValid(password *string) bool {
 }
 
 // Check username on valid
-func isUsernameValid(username string) bool {
+func IsUsernameValid(username string) bool {
 	if len(username) < 3 || len(username) > 20 {
 		return true
 	}
 
 	return regexp.MustCompile(`\s`).MatchString(username)
-}
-
-// Check title on valid
-func isTitleValid(title string) bool {
-	return len(title) > 150
-}
-
-// Check age on valid
-func isAgeValid(age uint8) bool {
-	return age < 18 || age > 100
-}
-
-// Check height on valid
-func isHeightValid(height uint8) bool {
-	return height < 140 || height > 220
-}
-
-// Check weight on valid
-func isWeightValid(weight uint8) bool {
-	return weight < 30 || weight > 220
-}
-
-// Check body on valid
-func isBodyValid(body uint8) bool {
-	return body < 1 || body > 7
 }

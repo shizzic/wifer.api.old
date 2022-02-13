@@ -8,7 +8,7 @@ func main() {
 	setHeaders()
 
 	r.POST("/registration", func(c *gin.Context) {
-		var data registrat
+		var data user
 		c.Bind(&data)
 
 		if err := Registration(data); err != nil {
@@ -27,7 +27,7 @@ func main() {
 		}
 	})
 
-	// Ensure if user set HIS email or not
+	// If user got this email and he understand that hasn't registrated on resurce, then he delete account with this email
 	r.DELETE("/ensureDelete", func(c *gin.Context) {
 		if err := EnsureDelete(c.PostForm("id"), c.PostForm("token")); err != nil {
 			c.String(400, err.Error())
@@ -36,7 +36,7 @@ func main() {
 		}
 	})
 
-	// Ensure if user set HIS email or not
+	// Smoothly delete user's account
 	r.DELETE("/deleteAccount", Auth(), func(c *gin.Context) {
 		if err := DeleteAccount(c.PostForm("password"), *c); err != nil {
 			c.String(400, err.Error())
@@ -45,7 +45,6 @@ func main() {
 		}
 	})
 
-	// Just login
 	r.POST("/login", func(c *gin.Context) {
 		if err := Login(c.PostForm("email"), c.PostForm("password"), *c); err != nil {
 			c.String(401, err.Error())
@@ -54,7 +53,6 @@ func main() {
 		}
 	})
 
-	// Password change
 	r.PUT("/changePassword", Auth(), func(c *gin.Context) {
 		if err := ChangePassword(c.PostForm("old"), c.PostForm("new"), *c); err != nil {
 			c.String(400, err.Error())
@@ -68,7 +66,6 @@ func main() {
 		SendChangeEmail(c.PostForm("old"), c.PostForm("new"), *c)
 	})
 
-	// Email change
 	r.PUT("/changeEmail", func(c *gin.Context) {
 		if err := ChangeEmail(c.PostForm("id"), c.PostForm("token"), c.PostForm("new"), *c); err != nil {
 			c.String(400, err.Error())
@@ -77,8 +74,43 @@ func main() {
 		}
 	})
 
-	r.GET("/test", Auth(), func(c *gin.Context) {
-		c.String(200, "some")
+	r.PUT("/changeTitle", Auth(), func(c *gin.Context) {
+		if err := ChangeTitle(c.PostForm("new"), *c); err != nil {
+			c.String(400, err.Error())
+		} else {
+			c.String(200, "title changed")
+		}
+	})
+
+	r.PUT("/changeUsername", Auth(), func(c *gin.Context) {
+		if err := ChangeUsername(c.PostForm("new"), *c); err != nil {
+			c.String(400, err.Error())
+		} else {
+			c.String(200, "username changed")
+		}
+	})
+
+	r.PUT("/changeParams", Auth(), func(c *gin.Context) {
+		var data user
+		c.Bind(&data)
+
+		if err := ChangeParams(data, *c); err != nil {
+			c.String(400, err.Error())
+		} else {
+			c.String(200, "Params changed")
+		}
+	})
+
+	r.PUT("/changeAbout", Auth(), func(c *gin.Context) {
+		if err := ChangeAbout(c.PostForm("text"), *c); err != nil {
+			c.String(400, err.Error())
+		} else {
+			c.String(200, "About changed")
+		}
+	})
+
+	r.GET("/test", func(c *gin.Context) {
+		c.String(200, "test")
 	})
 
 	run()

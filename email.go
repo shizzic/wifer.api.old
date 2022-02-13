@@ -57,15 +57,17 @@ func EnsureEmail(username, token, id string, c gin.Context) error {
 // Delete all user's data, if it triggered by link from email
 func EnsureDelete(id, token string) error {
 	if r, err := ensure.DeleteOne(ctx, bson.M{"_id": id, "token": token}); err != nil || r.DeletedCount == 0 {
-		return errors.New("error 1")
+		return errors.New("ensure hasn't deleted")
 	}
 
 	if _, err := about.DeleteOne(ctx, bson.M{"_id": id}); err != nil {
-		return errors.New("error 2")
+		return errors.New("about hasn't deleted")
 	}
 
-	if r, err := users.DeleteOne(ctx, bson.M{"_id": id}); err != nil || r.DeletedCount == 0 {
-		return errors.New("error")
+	if r, err := users.UpdateOne(ctx, bson.M{"_id": id}, bson.D{
+		{Key: "$set", Value: bson.D{{Key: "status", Value: false}}},
+	}); err != nil || r.ModifiedCount == 0 {
+		return errors.New("user hasn't banned")
 	}
 
 	return nil

@@ -17,9 +17,27 @@ var users = con.Database("wifer").Collection("users")
 var ensure = con.Database("wifer").Collection("ensure")
 var about = con.Database("wifer").Collection("about")
 
-// var views = con.Database("wifer").Collection("views")
-
 const uri string = "mongodb://shizzic:WebDev77@wifer-test.ru:27017/test?authSource=admin&readPreference=primary&appname=MongoDB%20Compass&directConnection=true&ssl=false"
+
+type user struct {
+	Id        string `form:"id"`
+	Username  string `form:"username"`
+	Email     string `form:"email"`
+	Password  string `form:"password"`
+	Title     string `form:"title"`
+	Sex       uint8  `form:"sex"`
+	Age       uint8  `form:"age"`
+	Height    uint8  `form:"height"`
+	Weight    uint8  `form:"weight"`
+	Body      uint8  `form:"body"`
+	Smokes    uint8  `form:"smokes"`
+	Drinks    uint8  `form:"drinks"`
+	Ethnicity uint8  `form:"ethnicity"`
+	Search    uint8  `form:"search"`
+	Income    uint8  `form:"income"`
+	Children  uint8  `form:"children"`
+	Industry  uint8  `form:"industry"`
+}
 
 func connect() *mongo.Client {
 	client, err := mongo.NewClient(options.Client().ApplyURI(uri))
