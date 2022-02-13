@@ -65,7 +65,7 @@ func main() {
 
 	// Send link to new user's email
 	r.POST("/sendChangeEmail", Auth(), func(c *gin.Context) {
-		SendChangeEmail(c.PostForm("old"), c.PostForm("new"), c.PostForm("username"), *c)
+		SendChangeEmail(c.PostForm("old"), c.PostForm("new"), *c)
 	})
 
 	// Email change

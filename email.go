@@ -96,8 +96,9 @@ func InfoAboutPasswordChange(email, username string) {
 }
 
 // Send link to new user's email
-func SendChangeEmail(oldEmail, newEmail, username string, c gin.Context) {
+func SendChangeEmail(oldEmail, newEmail string, c gin.Context) {
 	id, _ := c.Cookie("id")
+	username, _ := c.Cookie("username")
 	token := MakeToken()
 	ensure.InsertOne(ctx, bson.D{{Key: "_id", Value: id}, {Key: "token", Value: token}})
 
