@@ -45,6 +45,14 @@ func main() {
 		}
 	})
 
+	// r.DELETE("/restoreAccount", Auth(), func(c *gin.Context) {
+	// 	if err := DeleteAccount(c.PostForm("password"), *c); err != nil {
+	// 		c.String(400, err.Error())
+	// 	} else {
+	// 		c.String(200, "account restored")
+	// 	}
+	// })
+
 	r.POST("/login", func(c *gin.Context) {
 		if err := Login(c.PostForm("email"), c.PostForm("password"), *c); err != nil {
 			c.String(401, err.Error())

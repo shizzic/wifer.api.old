@@ -60,10 +60,8 @@ func EnsureDelete(id, token string) error {
 		return errors.New("ensure hasn't deleted")
 	}
 
-	if r, err := users.UpdateOne(ctx, bson.M{"_id": id}, bson.D{
-		{Key: "$set", Value: bson.D{{Key: "status", Value: false}}},
-	}); err != nil || r.ModifiedCount == 0 {
-		return errors.New("user hasn't banned")
+	if r, err := users.DeleteOne(ctx, bson.M{"_id": id}); err != nil || r.DeletedCount == 0 {
+		return errors.New("user hasn't deleted")
 	}
 
 	return nil

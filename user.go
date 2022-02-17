@@ -12,8 +12,9 @@ import (
 
 func ChangeAbout(text string, c gin.Context) error {
 	id, _ := c.Cookie("id")
+	len := len(text)
 
-	if len(text) > 19 {
+	if len > 19 && len < 1501 {
 		if r, err := users.UpdateOne(ctx, bson.M{"_id": id}, bson.D{
 			{Key: "$set", Value: bson.D{{Key: "about", Value: text}}},
 		}); err != nil || r.ModifiedCount == 0 {
