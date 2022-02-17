@@ -12,21 +12,12 @@ import (
 
 func ChangeAbout(text string, c gin.Context) error {
 	id, _ := c.Cookie("id")
-	var result bson.M
 
 	if len(text) > 19 {
-		if err := about.FindOne(ctx, bson.M{"_id": id}).Decode(&result); err != nil {
-			_, e := about.InsertOne(ctx, bson.D{{Key: "_id", Value: id}, {Key: "text", Value: text}})
-
-			if e != nil {
-				return errors.New("about not inserted")
-			}
-		} else {
-			if r, e := about.UpdateOne(ctx, bson.M{"_id": id}, bson.D{
-				{Key: "$set", Value: bson.D{{Key: "text", Value: text}}},
-			}); e != nil || r.ModifiedCount == 0 {
-				return errors.New("about not updated")
-			}
+		if r, err := users.UpdateOne(ctx, bson.M{"_id": id}, bson.D{
+			{Key: "$set", Value: bson.D{{Key: "about", Value: text}}},
+		}); err != nil || r.ModifiedCount == 0 {
+			return errors.New("about not updated")
 		}
 	} else {
 		return errors.New("short text")

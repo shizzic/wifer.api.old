@@ -48,6 +48,7 @@ func Registration(data user) error {
 		{Key: "premium", Value: false},
 		{Key: "status", Value: false},
 		{Key: "created_at", Value: time.Now().Unix()},
+		{Key: "about", Value: ""},
 	})
 
 	if err != nil {

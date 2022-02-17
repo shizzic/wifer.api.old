@@ -15,7 +15,6 @@ var http = gin.Default() // http server
 var con = connect()      // database
 var users = con.Database("wifer").Collection("users")
 var ensure = con.Database("wifer").Collection("ensure")
-var about = con.Database("wifer").Collection("about")
 
 const uri string = "mongodb://shizzic:WebDev77@wifer-test.ru:27017/test?authSource=admin&readPreference=primary&appname=MongoDB%20Compass&directConnection=true&ssl=false"
 
