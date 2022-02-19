@@ -2,13 +2,7 @@ package main
 
 import (
 	"github.com/gin-gonic/gin"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo/options"
 )
-
-type UsernameOnly struct {
-	Username string `bson:"username,omitempty"`
-}
 
 func main() {
 	setHeaders()
@@ -124,12 +118,13 @@ func main() {
 	})
 
 	r.GET("/test", func(c *gin.Context) {
-		// c.String(200, "test")
-		var user UsernameOnly
-		opts := options.FindOne().SetProjection(bson.M{"username": 1})
-		users.FindOne(ctx, bson.M{"username": "kotcich"}, opts).Decode(&user)
+		c.String(200, "test")
 
-		c.JSON(200, user)
+		// var user bson.M
+		// opts := options.FindOne().SetProjection(bson.M{"username": 1})
+		// users.FindOne(ctx, bson.M{"username": "kotcich"}, opts).Decode(&user)
+
+		// c.JSON(200, user)
 	})
 
 	run()

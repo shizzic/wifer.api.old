@@ -8,6 +8,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -74,7 +75,9 @@ func Auth() gin.HandlerFunc {
 // Login for Form from client side. Yea, i'm lil dick :D
 func Login(email, password string, c gin.Context) error {
 	var user bson.M
-	if err := users.FindOne(ctx, bson.M{"email": email}).Decode(&user); err != nil {
+	opts := options.FindOne().SetProjection(bson.M{"_id": 1, "username": 1, "password_hash": 1, "status": 1})
+
+	if err := users.FindOne(ctx, bson.M{"email": email}, opts).Decode(&user); err != nil {
 		return errors.New("document not found")
 	}
 

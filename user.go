@@ -7,6 +7,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -100,9 +101,11 @@ func ChangeEmail(id, token, newEmail string, c gin.Context) error {
 
 // Change password only from client side
 func ChangePassword(old, new string, c gin.Context) error {
-	var user bson.M
 	username, _ := c.Cookie("username")
-	if err := users.FindOne(ctx, bson.M{"username": username}).Decode(&user); err != nil {
+	var user bson.M
+	opts := options.FindOne().SetProjection(bson.M{"password_hash": 1, "email": 1})
+
+	if err := users.FindOne(ctx, bson.M{"username": username}, opts).Decode(&user); err != nil {
 		return errors.New("account not found")
 	}
 
@@ -123,7 +126,7 @@ func ChangePassword(old, new string, c gin.Context) error {
 	}
 
 	//inform user about success
-	InfoAboutPasswordChange(fmt.Sprint(user["email"]), fmt.Sprint(user["username"]))
+	InfoAboutPasswordChange(fmt.Sprint(user["email"]), username)
 
 	return nil
 }
@@ -132,8 +135,9 @@ func ChangePassword(old, new string, c gin.Context) error {
 func DeleteAccount(password string, c gin.Context) error {
 	username, _ := c.Cookie("username")
 	var user bson.M
+	opts := options.FindOne().SetProjection(bson.M{"password_hash": 1})
 
-	if err := users.FindOne(ctx, bson.M{"username": username}).Decode(&user); err != nil {
+	if err := users.FindOne(ctx, bson.M{"username": username}, opts).Decode(&user); err != nil {
 		return errors.New("account not deleted")
 	}
 
