@@ -38,6 +38,17 @@ type user struct {
 	Industry  uint8  `form:"industry"`
 }
 
+type List struct {
+	SortKey   string `json:"sortKey"`
+	SortValue int64  `json:"sortValue"`
+	AgeMin    uint8  `json:"ageMin"`
+	AgeMax    uint8  `json:"ageMax"`
+	HeightMin uint8  `json:"heightMin"`
+	HeightMax uint8  `json:"heightMax"`
+	Limit     int64  `json:"limit"`
+	Skip      int64  `json:"skip"`
+}
+
 func connect() *mongo.Client {
 	client, err := mongo.NewClient(options.Client().ApplyURI(uri))
 	if err != nil {

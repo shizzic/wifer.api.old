@@ -127,7 +127,9 @@ func main() {
 	})
 
 	r.GET("/getUsers", Auth(), func(c *gin.Context) {
-		// c.JSON(200, GetUsers())
+		var data List
+		c.ShouldBindJSON(&data)
+		c.JSON(200, GetUsers(data))
 	})
 
 	r.GET("/test", func(c *gin.Context) {
