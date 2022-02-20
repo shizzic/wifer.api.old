@@ -126,6 +126,10 @@ func main() {
 		}
 	})
 
+	r.GET("/getUsers", Auth(), func(c *gin.Context) {
+		// c.JSON(200, GetUsers())
+	})
+
 	r.GET("/test", func(c *gin.Context) {
 		c.String(200, "test")
 
