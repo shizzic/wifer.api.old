@@ -125,14 +125,12 @@ func ChangePassword(old, new string, c gin.Context) error {
 		return errors.New("error")
 	}
 
-	//inform user about success
-	InfoAboutPasswordChange(fmt.Sprint(user["email"]), username)
-
 	return nil
 }
 
-// Delete account only from client side
+// Delete account forever
 func DeleteAccount(password string, c gin.Context) error {
+	id, _ := c.Cookie("id")
 	username, _ := c.Cookie("username")
 	var user bson.M
 	opts := options.FindOne().SetProjection(bson.M{"password_hash": 1})
@@ -146,19 +144,44 @@ func DeleteAccount(password string, c gin.Context) error {
 		return errors.New("account not deleted")
 	}
 
-	// Smooth delete
-	if r, err := users.UpdateOne(ctx, bson.M{"username": username}, bson.D{
-		{Key: "$set", Value: bson.D{{Key: "status", Value: false}}},
-	}); err != nil || r.ModifiedCount == 0 {
+	if r, err := users.DeleteOne(ctx, bson.M{"_id": id, "username": username}); err != nil || r.DeletedCount == 0 {
 		return errors.New("account not deleted")
 	}
 
 	// delete cookie
-	c.SetCookie("token", "", -1, "/", "https://wifer-test.ru", true, true)
-	c.SetCookie("username", "", -1, "/", "https://wifer-test.ru", true, true)
-	c.SetCookie("id", "", -1, "/", "https://wifer-test.ru", true, true)
+	c.SetCookie("token", "", -1, "/", "wifer-test.ru", true, true)
+	c.SetCookie("username", "", -1, "/", "wifer-test.ru", true, true)
+	c.SetCookie("id", "", -1, "/", "wifer-test.ru", true, true)
 
-	//inform user about success
-	InfoAboutDelete(fmt.Sprint(user["email"]), fmt.Sprint(user["username"]))
+	return nil
+}
+
+// Set status to false for user
+func DiactivateAccount(password string, c gin.Context) error {
+	id, _ := c.Cookie("id")
+	username, _ := c.Cookie("username")
+	var user bson.M
+	opts := options.FindOne().SetProjection(bson.M{"password_hash": 1})
+
+	if err := users.FindOne(ctx, bson.M{"_id": id, "username": username}, opts).Decode(&user); err != nil {
+		return errors.New("account not frozen")
+	}
+
+	// Verify password
+	if err := ComparePassword(fmt.Sprint(user["password_hash"]), password); err != nil {
+		return errors.New("account not frozen")
+	}
+
+	if r, err := users.UpdateOne(ctx, bson.M{"_id": id, "username": username}, bson.D{
+		{Key: "$set", Value: bson.D{{Key: "status", Value: false}}},
+	}); err != nil || r.ModifiedCount == 0 {
+		return errors.New("account not frozen")
+	}
+
+	// delete cookie
+	c.SetCookie("token", "", -1, "/", "wifer-test.ru", true, true)
+	c.SetCookie("username", "", -1, "/", "wifer-test.ru", true, true)
+	c.SetCookie("id", "", -1, "/", "wifer-test.ru", true, true)
+
 	return nil
 }

@@ -36,12 +36,21 @@ func main() {
 		}
 	})
 
-	// Smoothly delete user's account
+	// Delete all user's data forever
 	r.DELETE("/deleteAccount", Auth(), func(c *gin.Context) {
 		if err := DeleteAccount(c.PostForm("password"), *c); err != nil {
 			c.String(400, err.Error())
 		} else {
 			c.String(200, "account deleted")
+		}
+	})
+
+	// Delete user's data smootly
+	r.PUT("/deactivateAccount", Auth(), func(c *gin.Context) {
+		if err := DiactivateAccount(c.PostForm("password"), *c); err != nil {
+			c.String(400, err.Error())
+		} else {
+			c.String(200, "account frozen")
 		}
 	})
 

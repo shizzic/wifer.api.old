@@ -75,15 +75,10 @@ func Auth() gin.HandlerFunc {
 // Login for Form from client side. Yea, i'm lil dick :D
 func Login(email, password string, c gin.Context) error {
 	var user bson.M
-	opts := options.FindOne().SetProjection(bson.M{"_id": 1, "username": 1, "password_hash": 1, "status": 1})
+	opts := options.FindOne().SetProjection(bson.M{"_id": 1, "username": 1, "password_hash": 1, "status": 1, "active": 1})
 
 	if err := users.FindOne(ctx, bson.M{"email": email}, opts).Decode(&user); err != nil {
 		return errors.New("document not found")
-	}
-
-	// Check if user ever ensure his account or ever been deleted
-	if user["status"] == false {
-		return errors.New("bad status")
 	}
 
 	// Verify password
@@ -91,11 +86,22 @@ func Login(email, password string, c gin.Context) error {
 		return errors.New("wrong password")
 	}
 
+	// Check if user ever ensure his account or ever been deleted
+	if user["active"] == false {
+		return errors.New("email not ensure")
+	} else if user["active"] == true && user["status"] == false {
+		if r, err := users.UpdateOne(ctx, bson.M{"_id": user["_id"]}, bson.D{
+			{Key: "$set", Value: bson.D{{Key: "status", Value: true}}},
+		}); err != nil || r.ModifiedCount == 0 {
+			return errors.New("account not activated")
+		}
+	}
+
 	// create cookies
 	var username string = fmt.Sprint(user["username"])
-	c.SetCookie("token", EncryptToken(username), 120, "/", "https://wifer-test.ru", true, true)
-	c.SetCookie("username", username, 120, "/", "https://wifer-test.ru", true, true)
-	c.SetCookie("id", fmt.Sprint(user["_id"]), 120, "/", "https://wifer-test.ru", true, true)
+	c.SetCookie("token", EncryptToken(username), 120, "/", "wifer-test.ru", true, true)
+	c.SetCookie("username", username, 120, "/", "wifer-test.ru", true, true)
+	c.SetCookie("id", fmt.Sprint(user["_id"]), 120, "/", "wifer-test.ru", true, true)
 
 	return nil
 }

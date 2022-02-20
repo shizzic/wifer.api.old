@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -21,6 +22,19 @@ func Registration(data user) error {
 
 	if !IsPasswordValid(&data.Password) {
 		return errors.New("incorrect password")
+	}
+
+	var user bson.M
+	opts := options.FindOne().SetProjection(bson.M{"_id": 1, "active": 1})
+
+	if err := users.FindOne(ctx, bson.M{"email": data.Email}, opts).Decode(&user); err == nil {
+		if user["active"] != true {
+			if r, err := users.DeleteOne(ctx, bson.M{"email": data.Email}); err != nil || r.DeletedCount == 0 {
+				return errors.New("error with replace accounts")
+			}
+
+			ensure.DeleteOne(ctx, bson.M{"_id": user["_id"]})
+		}
 	}
 
 	// Count all users for make unique id and than
@@ -46,7 +60,8 @@ func Registration(data user) error {
 		{Key: "children", Value: data.Children},
 		{Key: "industry", Value: data.Industry},
 		{Key: "premium", Value: false},
-		{Key: "status", Value: false},
+		{Key: "status", Value: true},
+		{Key: "active", Value: false},
 		{Key: "created_at", Value: time.Now().Unix()},
 		{Key: "about", Value: ""},
 	})

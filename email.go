@@ -41,7 +41,7 @@ func EnsureEmail(username, token, id string, c gin.Context) error {
 	}
 
 	if r, err := users.UpdateOne(ctx, bson.M{"_id": id}, bson.D{
-		{Key: "$set", Value: bson.D{{Key: "status", Value: true}}},
+		{Key: "$set", Value: bson.D{{Key: "active", Value: true}}},
 	}); err != nil || r.ModifiedCount == 0 {
 		return errors.New("document not updated")
 	}
@@ -65,30 +65,6 @@ func EnsureDelete(id, token string) error {
 	}
 
 	return nil
-}
-
-// Tell user that his account has been deleted
-func InfoAboutDelete(email, username string) {
-	m := gomail.NewMessage()
-	m.SetHeader("From", "Wifer <admin@wifer-test.ru>")
-	m.SetHeader("To", email)
-	m.SetHeader("Subject", "Account removing")
-	m.SetBody("text/html", "<p>Hello dear <b>"+username+"</b>. Your account deleted successfully!")
-	d := gomail.NewDialer("skvmrelay.netangels.ru", 25, "admin@wifer-test.ru", "jukdNRaVWf3Fvmg")
-	d.TLSConfig = &tls.Config{InsecureSkipVerify: true}
-	d.DialAndSend(m)
-}
-
-// Tell user that his password was changed
-func InfoAboutPasswordChange(email, username string) {
-	m := gomail.NewMessage()
-	m.SetHeader("From", "Wifer <admin@wifer-test.ru>")
-	m.SetHeader("To", email)
-	m.SetHeader("Subject", "Password change")
-	m.SetBody("text/html", "<p>Hello dear <b>"+username+"</b>. Your password was successfully changed")
-	d := gomail.NewDialer("skvmrelay.netangels.ru", 25, "admin@wifer-test.ru", "jukdNRaVWf3Fvmg")
-	d.TLSConfig = &tls.Config{InsecureSkipVerify: true}
-	d.DialAndSend(m)
 }
 
 // Send link to new user's email
