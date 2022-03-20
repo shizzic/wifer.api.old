@@ -130,7 +130,11 @@ func main() {
 		var data List
 		c.ShouldBindJSON(&data)
 		c.JSON(200, GetUsers(data))
-		// c.JSON(200, data)
+	})
+
+	r.POST("/upload", func(c *gin.Context) {
+		SaveImage(c.PostForm("dir"), *c)
+		c.String(200, "ok")
 	})
 
 	r.GET("/test", func(c *gin.Context) {

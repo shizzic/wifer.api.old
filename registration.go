@@ -62,6 +62,9 @@ func Registration(data user) error {
 		{Key: "premium", Value: false},
 		{Key: "status", Value: true},
 		{Key: "active", Value: false},
+		{Key: "avatar", Value: false},
+		{Key: "public", Value: 0},
+		{Key: "private", Value: 0},
 		{Key: "created_at", Value: time.Now().Unix()},
 		{Key: "about", Value: ""},
 	})

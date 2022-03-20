@@ -99,9 +99,9 @@ func Login(email, password string, c gin.Context) error {
 
 	// create cookies
 	var username string = fmt.Sprint(user["username"])
-	c.SetCookie("token", EncryptToken(username), 120, "/", "wifer-test.ru", true, true)
-	c.SetCookie("username", username, 120, "/", "wifer-test.ru", true, true)
-	c.SetCookie("id", fmt.Sprint(user["_id"]), 120, "/", "wifer-test.ru", true, true)
+	c.SetCookie("token", EncryptToken(username), 86400*30, "/", "wifer-test.ru", true, true)
+	c.SetCookie("username", username, 86400*30, "/", "wifer-test.ru", true, true)
+	c.SetCookie("id", fmt.Sprint(user["_id"]), 86400*30, "/", "wifer-test.ru", true, true)
 
 	return nil
 }
