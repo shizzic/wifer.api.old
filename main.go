@@ -137,8 +137,17 @@ func main() {
 		c.String(200, "ok")
 	})
 
+	r.PUT("/changeImageDir", func(c *gin.Context) {
+		result := DeleteImage(c.Query("isAvatar"), c.Query("dir"), c.Query("number"), *c)
+		c.String(200, result)
+	})
+
+	r.DELETE("/deleteImage", func(c *gin.Context) {
+		result := DeleteImage(c.Query("isAvatar"), c.Query("dir"), c.Query("number"), *c)
+		c.String(200, result)
+	})
+
 	r.GET("/test", func(c *gin.Context) {
-		c.String(200, "test")
 
 		// var user bson.M
 		// opts := options.FindOne().SetProjection(bson.M{"username": 1})
