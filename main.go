@@ -133,18 +133,18 @@ func main() {
 	})
 
 	r.POST("/upload", func(c *gin.Context) {
-		SaveImage(c.PostForm("dir"), *c)
-		c.String(200, "ok")
+		UploadImage(c.PostForm("dir"), *c)
+		c.String(200, "nice")
 	})
 
 	r.PUT("/changeImageDir", func(c *gin.Context) {
-		result := DeleteImage(c.Query("isAvatar"), c.Query("dir"), c.Query("number"), *c)
-		c.String(200, result)
+		ChangeImageDir(c.Query("isAvatar"), c.Query("dir"), c.Query("new"), c.Query("number"), *c)
+		c.String(200, "nice")
 	})
 
 	r.DELETE("/deleteImage", func(c *gin.Context) {
-		result := DeleteImage(c.Query("isAvatar"), c.Query("dir"), c.Query("number"), *c)
-		c.String(200, result)
+		DeleteImage(c.Query("isAvatar"), c.Query("dir"), c.Query("number"), *c)
+		c.String(200, "nice")
 	})
 
 	r.GET("/test", func(c *gin.Context) {
