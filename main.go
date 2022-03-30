@@ -142,6 +142,11 @@ func main() {
 		c.String(200, "nice")
 	})
 
+	r.PUT("/replaceAvatar", func(c *gin.Context) {
+		ReplaceAvatar(c.Query("dir"), c.Query("number"), *c)
+		c.String(200, "nice")
+	})
+
 	r.DELETE("/deleteImage", func(c *gin.Context) {
 		DeleteImage(c.Query("isAvatar"), c.Query("dir"), c.Query("number"), *c)
 		c.String(200, "nice")
