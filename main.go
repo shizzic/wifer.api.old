@@ -132,22 +132,22 @@ func main() {
 		c.JSON(200, GetUsers(data))
 	})
 
-	r.POST("/upload", func(c *gin.Context) {
+	r.POST("/upload", Auth(), func(c *gin.Context) {
 		UploadImage(c.PostForm("dir"), *c)
 		c.String(200, "nice")
 	})
 
-	r.PUT("/changeImageDir", func(c *gin.Context) {
+	r.PUT("/changeImageDir", Auth(), func(c *gin.Context) {
 		ChangeImageDir(c.Query("isAvatar"), c.Query("dir"), c.Query("new"), c.Query("number"), *c)
 		c.String(200, "nice")
 	})
 
-	r.PUT("/replaceAvatar", func(c *gin.Context) {
+	r.PUT("/replaceAvatar", Auth(), func(c *gin.Context) {
 		ReplaceAvatar(c.Query("dir"), c.Query("number"), *c)
 		c.String(200, "nice")
 	})
 
-	r.DELETE("/deleteImage", func(c *gin.Context) {
+	r.DELETE("/deleteImage", Auth(), func(c *gin.Context) {
 		DeleteImage(c.Query("isAvatar"), c.Query("dir"), c.Query("number"), *c)
 		c.String(200, "nice")
 	})

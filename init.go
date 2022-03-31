@@ -18,6 +18,8 @@ var ensure = con.Database("wifer").Collection("ensure")
 
 const uri string = "mongodb://shizzic:WebDev77@wifer-test.ru:27017/test?authSource=admin&readPreference=primary&appname=MongoDB%20Compass&directConnection=true&ssl=false"
 
+// mongodump "mongodb://shizzic:WebDev77@wifer-test.ru:27017/wifer?authSource=admin&readPreference=primary&appname=MongoDB%20Compass&directConnection=true&ssl=false" -d wifer -o /var/www/default/site
+
 type user struct {
 	Id        string `form:"id"`
 	Username  string `form:"username"`
