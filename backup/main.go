@@ -9,7 +9,7 @@ import (
 	"github.com/mholt/archiver/v4"
 )
 
-func StartBackUp() {
+func main() {
 	err := exec.Command("mongodump", "mongodb://shizzic:WebDev77@wifer-test.ru:27017/wifer?authSource=admin&readPreference=primary&appname=MongoDB%20Compass&directConnection=true&ssl=false", "-d", "wifer", "-o", "/var/www/default/site").Run()
 
 	if err == nil {
@@ -45,5 +45,5 @@ func ToBackblaze() {
 	bucket, _ := b2.Bucket("my-wifer")
 	reader, _ := os.Open("/var/www/default/site/archive.tar.gz")
 	metadata := make(map[string]string)
-	bucket.UploadFile("some.txt", metadata, reader)
+	bucket.UploadFile("db.tar.gz", metadata, reader)
 }
