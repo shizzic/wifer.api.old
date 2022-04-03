@@ -153,12 +153,7 @@ func main() {
 	})
 
 	r.GET("/test", func(c *gin.Context) {
-
-		// var user bson.M
-		// opts := options.FindOne().SetProjection(bson.M{"username": 1})
-		// users.FindOne(ctx, bson.M{"username": "kotcich"}, opts).Decode(&user)
-
-		// c.JSON(200, user)
+		c.JSON(200, gin.H{"ok": "ok"})
 	})
 
 	run()
