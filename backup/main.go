@@ -46,4 +46,5 @@ func ToBackblaze() {
 	reader, _ := os.Open("/var/www/default/site/archive.tar.gz")
 	metadata := make(map[string]string)
 	bucket.UploadFile("db.tar.gz", metadata, reader)
+	os.RemoveAll("/var/www/default/site/archive.tar.gz")
 }
