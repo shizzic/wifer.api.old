@@ -50,9 +50,12 @@ func ToBackblaze() {
 	})
 	bucket, _ := b2.Bucket("my-wifer")
 
-	content, _ := ioutil.ReadFile("/var/www/default/site/fileId.txt")
-	fileId := string(content)
-	bucket.DeleteFileVersion("db.tar.gz", fileId)
+	_, err := os.Stat("/var/www/default/site/fileId.txt")
+	if err == nil {
+		content, _ := ioutil.ReadFile("/var/www/default/site/fileId.txt")
+		fileId := string(content)
+		bucket.DeleteFileVersion("db.tar.gz", fileId)
+	}
 
 	reader, _ := os.Open("/var/www/default/site/archive.tar.gz")
 	metadata := make(map[string]string)
