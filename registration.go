@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
+	"strconv"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -37,12 +38,21 @@ func Registration(data user) error {
 		}
 	}
 
-	// Count all users for make unique id and than
-	id, _ := users.CountDocuments(ctx, bson.D{})
-	id += time.Now().Unix()
+	// Getting the last user for id
+	var last bson.M
+	opts = options.FindOne().SetProjection(bson.M{"_id": 1}).SetSort(bson.D{{Key: "_id", Value: -1}})
+	users.FindOne(ctx, bson.M{}, opts).Decode(&last)
+	id := ""
+	if last["_id"] == nil {
+		id = "1"
+	} else {
+		lastId, _ := strconv.ParseInt(last["_id"].(string), 10, 64)
+		id = fmt.Sprint(lastId + 1)
+	}
+	date := time.Now().Unix()
 
 	ObjectId, err := users.InsertOne(ctx, bson.D{
-		{Key: "_id", Value: fmt.Sprint(id)},
+		{Key: "_id", Value: id},
 		{Key: "username", Value: data.Username},
 		{Key: "email", Value: data.Email},
 		{Key: "password_hash", Value: data.Password},
@@ -65,7 +75,7 @@ func Registration(data user) error {
 		{Key: "avatar", Value: false},
 		{Key: "public", Value: 0},
 		{Key: "private", Value: 0},
-		{Key: "created_at", Value: time.Now().Unix()},
+		{Key: "created_at", Value: date},
 		{Key: "about", Value: ""},
 	})
 
