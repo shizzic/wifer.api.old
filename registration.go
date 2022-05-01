@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
-	"strconv"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -38,16 +37,14 @@ func Registration(data user) error {
 		}
 	}
 
+	// last["_id"].(string)
 	// Getting the last user for id
 	var last bson.M
 	opts = options.FindOne().SetProjection(bson.M{"_id": 1}).SetSort(bson.D{{Key: "_id", Value: -1}})
 	users.FindOne(ctx, bson.M{}, opts).Decode(&last)
-	id := ""
-	if last["_id"] == nil {
-		id = "1"
-	} else {
-		lastId, _ := strconv.ParseInt(last["_id"].(string), 10, 64)
-		id = fmt.Sprint(lastId + 1)
+	id := 1
+	if last["_id"] != nil {
+		id = last["_id"].(int) + 1
 	}
 	date := time.Now().Unix()
 

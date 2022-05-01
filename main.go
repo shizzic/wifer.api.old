@@ -70,6 +70,14 @@ func main() {
 		}
 	})
 
+	r.POST("/forgotPassword", Auth(), func(c *gin.Context) {
+		if err := ForgotPassword(c.PostForm("email")); err != nil {
+			c.JSON(404, gin.H{"error": err.Error()})
+		} else {
+			c.JSON(200, true)
+		}
+	})
+
 	r.PUT("/changePassword", Auth(), func(c *gin.Context) {
 		if err := ChangePassword(c.PostForm("old"), c.PostForm("new"), *c); err != nil {
 			c.String(400, err.Error())
@@ -153,7 +161,11 @@ func main() {
 	})
 
 	r.GET("/test", func(c *gin.Context) {
-		c.JSON(200, gin.H{"ok": "ok"})
+		if username, e := c.Cookie("username"); e != nil {
+			c.String(500, "error")
+		} else {
+			c.String(200, username)
+		}
 	})
 
 	run()

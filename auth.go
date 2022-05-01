@@ -3,6 +3,8 @@ package main
 import (
 	"errors"
 	"math/rand"
+	h "net/http"
+	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -97,16 +99,18 @@ func Login(email, password string, c gin.Context) (string, string, error) {
 	}
 
 	// create cookies
-	var username string = user["username"].(string)
-	id := user["_id"].(string)
-	avatar := "profile.webp"
+	username := user["username"].(string)
+	id := strconv.Itoa(int(user["_id"].(int32)))
+	avatar := "/avatar.webp"
+
 	if user["avatar"] == true {
-		avatar = id + "/avatar.webp"
+		avatar = "http://" + serverID + ":81/" + id + "/avatar.webp"
 	}
 
-	c.SetCookie("token", EncryptToken(username), 86400*30, "/", "wifer-test.ru", true, true)
-	c.SetCookie("username", username, 86400*30, "/", "wifer-test.ru", true, true)
-	c.SetCookie("id", id, 86400*30, "/", "wifer-test.ru", true, true)
+	c.SetSameSite(h.SameSiteNoneMode)
+	c.SetCookie("token", EncryptToken(username), 86400*60, "/", domainBack, true, true)
+	c.SetCookie("username", username, 86400*60, "/", domainBack, true, true)
+	c.SetCookie("id", id, 86400*60, "/", domainBack, true, true)
 
 	return id, avatar, nil
 }

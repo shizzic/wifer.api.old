@@ -3,6 +3,7 @@ module wifer-test
 go 1.17
 
 require (
+	github.com/gin-contrib/cors v1.3.1
 	github.com/gin-gonic/gin v1.7.7
 	github.com/h2non/bimg v1.1.6
 	github.com/kothar/go-backblaze v0.0.0-20210124194846-35409b867216

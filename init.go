@@ -4,10 +4,16 @@ import (
 	"context"
 	"log"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
+
+var serverID string = "213.189.217.231"
+var domainClient string = "http://localhost:8080"
+var domainBack string = "wifer-test.ru"
+var emailPass string = "jukdNRaVWf3Fvmg"
 
 var ctx = context.TODO()
 var r = gin.Default()    // https server (MAIN)
@@ -16,12 +22,12 @@ var con = connect()      // database
 var users = con.Database("wifer").Collection("users")
 var ensure = con.Database("wifer").Collection("ensure")
 
-const uri string = "mongodb://shizzic:WebDev77@wifer-test.ru:27017/test?authSource=admin&readPreference=primary&appname=MongoDB%20Compass&directConnection=true&ssl=false"
+const mongoConnect string = "mongodb://shizzic:WebDev77@wifer-test.ru:27017/test?authSource=admin&readPreference=primary&appname=MongoDB%20Compass&directConnection=true&ssl=false"
 
 // mongodump "mongodb://shizzic:WebDev77@wifer-test.ru:27017/wifer?authSource=admin&readPreference=primary&appname=MongoDB%20Compass&directConnection=true&ssl=false" -d wifer -o /var/www/default/site
 
 type user struct {
-	Id        string `form:"id"`
+	Id        int    `form:"id"`
 	Username  string `form:"username"`
 	Email     string `form:"email"`
 	Password  string `form:"password"`
@@ -41,7 +47,7 @@ type user struct {
 }
 
 func connect() *mongo.Client {
-	client, err := mongo.NewClient(options.Client().ApplyURI(uri))
+	client, err := mongo.NewClient(options.Client().ApplyURI(mongoConnect))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -60,7 +66,7 @@ func connect() *mongo.Client {
 func redirect() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if c.Request.Proto != "HTTP/2.0" {
-			c.Redirect(302, "https://wifer-test.ru"+c.Request.URL.String())
+			c.Redirect(302, "https://"+domainBack+c.Request.URL.String())
 			return
 		}
 
@@ -69,19 +75,12 @@ func redirect() gin.HandlerFunc {
 }
 
 func CORSMiddleware() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		c.Header("Access-Control-Allow-Origin", "http://localhost:8080")
-		c.Header("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With")
-		c.Header("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT, DELETE")
-		c.Header("Access-Control-Allow-Credentials", "true")
-
-		if c.Request.Method == "OPTIONS" {
-			c.AbortWithStatus(204)
-			return
-		}
-
-		c.Next()
-	}
+	return cors.New(cors.Config{
+		AllowOrigins:     []string{domainClient, "http://192.168.1.106:8080"},
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "PATCH"},
+		AllowHeaders:     []string{"Content-Type", "Content-Length", "Accept-Encoding", "X-CSRF-Token", "Authorization", "accept", "origin", "Cache-Control", "X-Requested-With"},
+		AllowCredentials: true,
+	})
 }
 
 func setHeaders() {
@@ -96,6 +95,6 @@ func setHeaders() {
 
 // Run both: http and https servers
 func run() {
-	go r.RunTLS("213.189.217.231:443", "/etc/ssl/wifer-test/__wifer-test_ru.full.crt", "/etc/ssl/wifer-test/__wifer-test_ru.key")
-	http.Run("213.189.217.231:80")
+	go r.RunTLS(serverID+":443", "/etc/ssl/wifer-test/__wifer-test_ru.full.crt", "/etc/ssl/wifer-test/__wifer-test_ru.key")
+	http.Run(serverID + ":80")
 }
