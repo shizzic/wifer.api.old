@@ -118,7 +118,7 @@ func Login(email, password string, c gin.Context) (string, string, error) {
 // Compare password from client side and database side
 func ComparePassword(hash, password string) error {
 	if err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password)); err != nil {
-		return errors.New("wrong password")
+		return errors.New("0")
 	}
 
 	return nil

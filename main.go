@@ -74,21 +74,21 @@ func main() {
 		if err := ForgotPassword(c.PostForm("email")); err != nil {
 			c.JSON(404, gin.H{"error": err.Error()})
 		} else {
-			c.JSON(200, true)
+			c.JSON(200, gin.H{"data": true})
 		}
 	})
 
-	r.PUT("/changePassword", Auth(), func(c *gin.Context) {
+	r.PUT("/changePasswordByOld", Auth(), func(c *gin.Context) {
 		if err := ChangePasswordByOld(c.PostForm("old"), c.PostForm("new"), *c); err != nil {
-			c.String(400, err.Error())
+			c.JSON(400, gin.H{"error": err.Error()})
 		} else {
-			c.String(200, "password changed")
+			c.JSON(200, gin.H{"data": true})
 		}
 	})
 
 	r.PUT("/changePasswordByToken", Auth(), func(c *gin.Context) {
 		if err := ChangePasswordByToken(c.PostForm("password"), c.PostForm("token")); err != nil {
-			c.JSON(404, gin.H{"error": err.Error()})
+			c.JSON(400, gin.H{"error": err.Error()})
 		} else {
 			c.JSON(200, gin.H{"data": true})
 		}

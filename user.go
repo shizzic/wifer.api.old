@@ -101,31 +101,29 @@ func ChangeEmail(id, token, newEmail string, c gin.Context) error {
 
 // Change password only from client side
 func ChangePasswordByOld(old, new string, c gin.Context) error {
-	// idCookie, _ := c.Cookie("id")
-	// id, _ := strconv.ParseInt(idCookie, 6, 12)
-
-	username, _ := c.Cookie("username")
-	var user bson.M
-	opts := options.FindOne().SetProjection(bson.M{"password_hash": 1, "email": 1})
-
-	if err := users.FindOne(ctx, bson.M{"username": username}, opts).Decode(&user); err != nil {
-		return errors.New("account not found")
-	}
-
-	if err := ComparePassword(fmt.Sprint(user["password_hash"]), old); err != nil {
-		return errors.New("wrong password")
-	}
 
 	if len(new) < 8 || len(new) > 128 {
-		return errors.New("invalid password length")
-	}
+		return errors.New("0")
+	} else {
+		username, _ := c.Cookie("username")
+		var user bson.M
+		opts := options.FindOne().SetProjection(bson.M{"password_hash": 1, "email": 1})
 
-	hashed, _ := bcrypt.GenerateFromPassword([]byte(new), 8)
+		if err := users.FindOne(ctx, bson.M{"username": username}, opts).Decode(&user); err != nil {
+			return errors.New("1")
+		}
 
-	if r, err := users.UpdateOne(ctx, bson.M{"username": username}, bson.D{
-		{Key: "$set", Value: bson.D{{Key: "password_hash", Value: string(hashed)}}},
-	}); err != nil || r.ModifiedCount == 0 {
-		return errors.New("error")
+		if err := ComparePassword(fmt.Sprint(user["password_hash"]), old); err != nil {
+			return errors.New("2")
+		}
+
+		hashed, _ := bcrypt.GenerateFromPassword([]byte(new), 8)
+
+		if r, err := users.UpdateOne(ctx, bson.M{"username": username}, bson.D{
+			{Key: "$set", Value: bson.D{{Key: "password_hash", Value: string(hashed)}}},
+		}); err != nil || r.ModifiedCount == 0 {
+			return errors.New("3")
+		}
 	}
 
 	return nil
