@@ -63,10 +63,10 @@ func main() {
 	// })
 
 	r.POST("/login", func(c *gin.Context) {
-		if id, avatar, err := Login(c.PostForm("email"), c.PostForm("password"), *c); err != nil {
+		if id, err := Login(c.PostForm("email"), c.PostForm("password"), *c); err != nil {
 			c.JSON(401, gin.H{"error": err.Error()})
 		} else {
-			c.JSON(200, gin.H{"id": id, "avatar": avatar})
+			c.JSON(200, gin.H{"id": id})
 		}
 	})
 

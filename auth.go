@@ -74,45 +74,40 @@ func Auth() gin.HandlerFunc {
 }
 
 // Login for Form from client side. Yea, i'm lil dick :D
-func Login(email, password string, c gin.Context) (string, string, error) {
+func Login(email, password string, c gin.Context) (string, error) {
 	var user bson.M
 	opts := options.FindOne().SetProjection(bson.M{"_id": 1, "username": 1, "password_hash": 1, "status": 1, "active": 1, "avatar": 1})
 
 	if err := users.FindOne(ctx, bson.M{"email": email}, opts).Decode(&user); err != nil {
-		return "", "", errors.New("0")
+		return "", errors.New("0")
 	}
 
 	// Verify password
 	if err := ComparePassword(user["password_hash"].(string), password); err != nil {
-		return "", "", errors.New("1")
+		return "", errors.New("1")
 	}
 
 	// Check if user ever ensure his account or ever been deleted
 	if user["active"] == false {
-		return "", "", errors.New("2")
+		return "", errors.New("2")
 	} else if user["active"] == true && user["status"] == false {
 		if r, err := users.UpdateOne(ctx, bson.M{"_id": user["_id"]}, bson.D{
 			{Key: "$set", Value: bson.D{{Key: "status", Value: true}}},
 		}); err != nil || r.ModifiedCount == 0 {
-			return "", "", errors.New("3")
+			return "", errors.New("3")
 		}
 	}
 
 	// create cookies
 	username := user["username"].(string)
 	id := strconv.Itoa(int(user["_id"].(int32)))
-	avatar := "/avatar.webp"
-
-	if user["avatar"] == true {
-		avatar = "http://" + serverID + ":81/" + id + "/avatar.webp"
-	}
 
 	c.SetSameSite(h.SameSiteNoneMode)
 	c.SetCookie("token", EncryptToken(username), 86400*60, "/", domainBack, true, true)
 	c.SetCookie("username", username, 86400*60, "/", domainBack, true, true)
 	c.SetCookie("id", id, 86400*60, "/", domainBack, true, true)
 
-	return id, avatar, nil
+	return id, nil
 }
 
 // Compare password from client side and database side
