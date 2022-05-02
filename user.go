@@ -100,7 +100,10 @@ func ChangeEmail(id, token, newEmail string, c gin.Context) error {
 }
 
 // Change password only from client side
-func ChangePassword(old, new string, c gin.Context) error {
+func ChangePasswordByOld(old, new string, c gin.Context) error {
+	// idCookie, _ := c.Cookie("id")
+	// id, _ := strconv.ParseInt(idCookie, 6, 12)
+
 	username, _ := c.Cookie("username")
 	var user bson.M
 	opts := options.FindOne().SetProjection(bson.M{"password_hash": 1, "email": 1})
@@ -123,6 +126,29 @@ func ChangePassword(old, new string, c gin.Context) error {
 		{Key: "$set", Value: bson.D{{Key: "password_hash", Value: string(hashed)}}},
 	}); err != nil || r.ModifiedCount == 0 {
 		return errors.New("error")
+	}
+
+	return nil
+}
+
+// Change password after click on link in email
+func ChangePasswordByToken(password, token string) error {
+	if len(password) < 8 || len(password) > 128 {
+		return errors.New("0")
+	} else {
+		var data bson.M
+		if err := ensure.FindOne(ctx, bson.M{"token": token}).Decode(&data); err != nil {
+			return errors.New("1")
+		}
+
+		ensure.DeleteOne(ctx, bson.M{"_id": data["_id"]})
+		hashed, _ := bcrypt.GenerateFromPassword([]byte(password), 8)
+
+		if r, err := users.UpdateOne(ctx, bson.M{"_id": data["_id"]}, bson.D{
+			{Key: "$set", Value: bson.D{{Key: "password_hash", Value: string(hashed)}}},
+		}); err != nil || r.ModifiedCount == 0 {
+			return errors.New("2")
+		}
 	}
 
 	return nil

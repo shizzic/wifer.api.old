@@ -79,10 +79,18 @@ func main() {
 	})
 
 	r.PUT("/changePassword", Auth(), func(c *gin.Context) {
-		if err := ChangePassword(c.PostForm("old"), c.PostForm("new"), *c); err != nil {
+		if err := ChangePasswordByOld(c.PostForm("old"), c.PostForm("new"), *c); err != nil {
 			c.String(400, err.Error())
 		} else {
 			c.String(200, "password changed")
+		}
+	})
+
+	r.PUT("/changePasswordByToken", Auth(), func(c *gin.Context) {
+		if err := ChangePasswordByToken(c.PostForm("password"), c.PostForm("token")); err != nil {
+			c.JSON(404, gin.H{"error": err.Error()})
+		} else {
+			c.JSON(200, gin.H{"data": true})
 		}
 	})
 
