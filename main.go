@@ -12,7 +12,7 @@ func main() {
 		c.Bind(&data)
 
 		if err := Registration(data); err != nil {
-			c.String(400, err.Error())
+			c.JSON(400, err.Error())
 		} else {
 			c.JSON(200, "inserted")
 		}
@@ -169,6 +169,11 @@ func main() {
 	})
 
 	r.GET("/test", func(c *gin.Context) {
+		// cursor, _ := cities.Find(ctx, bson.M{"country_id": 231})
+		// var data []bson.M
+		// cursor.All(ctx, &data)
+		// c.JSON(200, data)
+
 		if username, e := c.Cookie("username"); e != nil {
 			c.String(500, "error")
 		} else {
