@@ -1,10 +1,8 @@
 package main
 
 import (
-	"context"
-
 	"github.com/gin-gonic/gin"
-	"google.golang.org/api/idtoken"
+	fb "github.com/huandu/facebook/v2"
 )
 
 func main() {
@@ -183,8 +181,18 @@ func main() {
 		// 	c.String(200, username)
 		// }
 
-		payload, _ := idtoken.Validate(context.Background(), c.Query("secret"), c.Query("id"))
-		c.JSON(200, payload.Claims)
+		// payload, _ := idtoken.Validate(context.Background(), c.Query("secret"), c.Query("id"))
+		// c.JSON(200, payload.Claims)
+
+		// req := curl.NewRequest()
+		// resp, _ := req.Get("https://graph.facebook.com/v9.0/me?access_token=EAAvouaj2GXcBANUuLL8kfhjJsLJgtZChiDFSlDSZBhkP9XIv4X2tM0NMlrZBZCgmUlmtnnpa92wRmNMZCf8XXTYRQdjdnJhtodsZBfP5Dtkhzfke0LVGvD8rk3lANOkLKYEP0lqOfaOlyQZAV0ZARzXsg2ZBicaugwoMvB9QZBafBZBZCzEcRcr13XdZCGEiCtJZCfZCg9YVJ7HafzxJPgZApBsSLOkJ&fields=email&method=get&pretty=0&sdk=joey&suppress_http_code=1")
+
+		res, _ := fb.Get("/"+c.Query("id"), fb.Params{
+			"fields":       "email",
+			"access_token": c.Query("token"),
+		})
+
+		c.JSON(200, res)
 	})
 
 	run()
