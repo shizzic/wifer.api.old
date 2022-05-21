@@ -10,9 +10,9 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"golang.org/x/crypto/bcrypt"
 )
 
+const nums = "1234567890"
 const letters = "1234567890_-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
 func EncryptToken(username string) (token string) {
@@ -82,11 +82,6 @@ func Login(email, password string, c gin.Context) (string, error) {
 		return "", errors.New("0")
 	}
 
-	// Verify password
-	if err := ComparePassword(user["password_hash"].(string), password); err != nil {
-		return "", errors.New("1")
-	}
-
 	// Check if user ever ensure his account or ever been deleted
 	if user["active"] == false {
 		return "", errors.New("2")
@@ -110,22 +105,29 @@ func Login(email, password string, c gin.Context) (string, error) {
 	return id, nil
 }
 
-// Compare password from client side and database side
-func ComparePassword(hash, password string) error {
-	if err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password)); err != nil {
-		return errors.New("0")
+// Check code's fit for ensure
+func CheckCode(id int, code string) bool {
+	var data bson.M
+	opts := options.FindOne().SetProjection(bson.M{"code": 1})
+
+	if err := ensure.FindOne(ctx, bson.M{"_id": id}, opts).Decode(&data); err != nil {
+		return false
 	}
 
-	return nil
+	if data["code"] != code {
+		return false
+	}
+
+	return true
 }
 
 // Make token for auth any email operations or something :)
-func MakeToken() string {
+func MakeCode() string {
 	rand.Seed(time.Now().UnixNano())
 
-	b := make([]byte, 64)
+	b := make([]byte, 6)
 	for i := range b {
-		b[i] = letters[rand.Int63()%int64(len(letters))]
+		b[i] = nums[rand.Int63()%int64(len(nums))]
 	}
 
 	return string(b)

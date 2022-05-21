@@ -30,10 +30,12 @@ const mongoConnect string = "mongodb://shizzic:WebDev77@wifer-test.ru:27017/test
 
 type user struct {
 	Id        int    `form:"id"`
+	Country   int    `form:"country"`
+	City      int    `form:"city"`
 	Username  string `form:"username"`
 	Email     string `form:"email"`
-	Password  string `form:"password"`
 	Title     string `form:"title"`
+	About     string `form:"about"`
 	Sex       uint8  `form:"sex"`
 	Age       uint8  `form:"age"`
 	Height    uint8  `form:"height"`

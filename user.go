@@ -2,13 +2,11 @@ package main
 
 import (
 	"errors"
-	"fmt"
 	h "net/http"
 
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"golang.org/x/crypto/bcrypt"
 )
 
 func ChangeAbout(text string, c gin.Context) error {
@@ -44,6 +42,8 @@ func ChangeParams(data user, c gin.Context) error {
 		{Key: "$set", Value: bson.D{{Key: "children", Value: data.Children}}},
 		{Key: "$set", Value: bson.D{{Key: "industry", Value: data.Industry}}},
 		{Key: "$set", Value: bson.D{{Key: "ethnicity", Value: data.Ethnicity}}},
+		{Key: "$set", Value: bson.D{{Key: "country_id", Value: data.Country}}},
+		{Key: "$set", Value: bson.D{{Key: "city_id", Value: data.City}}},
 	}); err != nil || r.ModifiedCount == 0 {
 		return errors.New("error")
 	}
@@ -99,59 +99,6 @@ func ChangeEmail(id, token, newEmail string, c gin.Context) error {
 	return nil
 }
 
-// Change password only from client side
-func ChangePasswordByOld(old, new string, c gin.Context) error {
-
-	if len(new) < 8 || len(new) > 128 {
-		return errors.New("0")
-	} else {
-		username, _ := c.Cookie("username")
-		var user bson.M
-		opts := options.FindOne().SetProjection(bson.M{"password_hash": 1, "email": 1})
-
-		if err := users.FindOne(ctx, bson.M{"username": username}, opts).Decode(&user); err != nil {
-			return errors.New("1")
-		}
-
-		if err := ComparePassword(fmt.Sprint(user["password_hash"]), old); err != nil {
-			return errors.New("2")
-		}
-
-		hashed, _ := bcrypt.GenerateFromPassword([]byte(new), 8)
-
-		if r, err := users.UpdateOne(ctx, bson.M{"username": username}, bson.D{
-			{Key: "$set", Value: bson.D{{Key: "password_hash", Value: string(hashed)}}},
-		}); err != nil || r.ModifiedCount == 0 {
-			return errors.New("3")
-		}
-	}
-
-	return nil
-}
-
-// Change password after click on link in email
-func ChangePasswordByToken(password, token string) error {
-	if len(password) < 8 || len(password) > 128 {
-		return errors.New("0")
-	} else {
-		var data bson.M
-		if err := ensure.FindOne(ctx, bson.M{"token": token}).Decode(&data); err != nil {
-			return errors.New("1")
-		}
-
-		ensure.DeleteOne(ctx, bson.M{"_id": data["_id"]})
-		hashed, _ := bcrypt.GenerateFromPassword([]byte(password), 8)
-
-		if r, err := users.UpdateOne(ctx, bson.M{"_id": data["_id"]}, bson.D{
-			{Key: "$set", Value: bson.D{{Key: "password_hash", Value: string(hashed)}}},
-		}); err != nil || r.ModifiedCount == 0 {
-			return errors.New("2")
-		}
-	}
-
-	return nil
-}
-
 // Delete account forever
 func DeleteAccount(password string, c gin.Context) error {
 	id, _ := c.Cookie("id")
@@ -160,11 +107,6 @@ func DeleteAccount(password string, c gin.Context) error {
 	opts := options.FindOne().SetProjection(bson.M{"password_hash": 1})
 
 	if err := users.FindOne(ctx, bson.M{"username": username}, opts).Decode(&user); err != nil {
-		return errors.New("account not deleted")
-	}
-
-	// Verify password
-	if err := ComparePassword(fmt.Sprint(user["password_hash"]), password); err != nil {
 		return errors.New("account not deleted")
 	}
 
@@ -191,11 +133,6 @@ func DiactivateAccount(password string, c gin.Context) error {
 		return errors.New("account not frozen")
 	}
 
-	// Verify password
-	if err := ComparePassword(fmt.Sprint(user["password_hash"]), password); err != nil {
-		return errors.New("account not frozen")
-	}
-
 	if r, err := users.UpdateOne(ctx, bson.M{"_id": id, "username": username}, bson.D{
 		{Key: "$set", Value: bson.D{{Key: "status", Value: false}}},
 	}); err != nil || r.ModifiedCount == 0 {
@@ -208,4 +145,18 @@ func DiactivateAccount(password string, c gin.Context) error {
 	c.SetCookie("id", "", -1, "/", "wifer-test.ru", true, true)
 
 	return nil
+}
+
+func Google(id, secret string) {
+	// "https://www.googleapis.com/auth/userinfo.email"
+
+	// conf := &oauth2.Config{
+	// 	ClientID:     id,
+	// 	ClientSecret: secret,
+	// 	RedirectURL:  "http://localhost:8080/search",
+	// 	Scopes:       []string{"email"},
+	// 	Endpoint:     google.Endpoint,
+	// }
+
+	// tok, _ := conf.Exchange(context.TODO(), "")
 }

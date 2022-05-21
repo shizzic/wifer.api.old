@@ -1,17 +1,44 @@
 package main
 
 import (
+	"context"
+
 	"github.com/gin-gonic/gin"
+	"google.golang.org/api/idtoken"
 )
 
 func main() {
 	setHeaders()
 
+	r.POST("/signin", func(c *gin.Context) {
+		var data user
+		c.Bind(&data)
+
+		if err := Signin(data); err != nil {
+			c.JSON(400, err.Error())
+		} else {
+			c.JSON(200, "inserted")
+		}
+
+		// c.JSON(200, data)
+	})
+
+	r.POST("/checkCode", func(c *gin.Context) {
+		var data user
+		c.Bind(&data)
+
+		if err := Signin(data); err != nil {
+			c.JSON(400, err.Error())
+		} else {
+			c.JSON(200, "inserted")
+		}
+	})
+
 	r.POST("/registration", func(c *gin.Context) {
 		var data user
 		c.Bind(&data)
 
-		if err := Registration(data); err != nil {
+		if err := Signin(data); err != nil {
 			c.JSON(400, err.Error())
 		} else {
 			c.JSON(200, "inserted")
@@ -67,30 +94,6 @@ func main() {
 			c.JSON(401, gin.H{"error": err.Error()})
 		} else {
 			c.JSON(200, gin.H{"id": id})
-		}
-	})
-
-	r.POST("/forgotPassword", Auth(), func(c *gin.Context) {
-		if err := ForgotPassword(c.PostForm("email")); err != nil {
-			c.JSON(404, gin.H{"error": err.Error()})
-		} else {
-			c.JSON(200, gin.H{"data": true})
-		}
-	})
-
-	r.PUT("/changePasswordByOld", Auth(), func(c *gin.Context) {
-		if err := ChangePasswordByOld(c.PostForm("old"), c.PostForm("new"), *c); err != nil {
-			c.JSON(400, gin.H{"error": err.Error()})
-		} else {
-			c.JSON(200, gin.H{"data": true})
-		}
-	})
-
-	r.PUT("/changePasswordByToken", Auth(), func(c *gin.Context) {
-		if err := ChangePasswordByToken(c.PostForm("password"), c.PostForm("token")); err != nil {
-			c.JSON(400, gin.H{"error": err.Error()})
-		} else {
-			c.JSON(200, gin.H{"data": true})
 		}
 	})
 
@@ -174,11 +177,14 @@ func main() {
 		// cursor.All(ctx, &data)
 		// c.JSON(200, data)
 
-		if username, e := c.Cookie("username"); e != nil {
-			c.String(500, "error")
-		} else {
-			c.String(200, username)
-		}
+		// if username, e := c.Cookie("username"); e != nil {
+		// 	c.String(500, "error")
+		// } else {
+		// 	c.String(200, username)
+		// }
+
+		payload, _ := idtoken.Validate(context.Background(), c.Query("secret"), c.Query("id"))
+		c.JSON(200, payload.Claims)
 	})
 
 	run()
