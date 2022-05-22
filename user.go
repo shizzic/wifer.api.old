@@ -9,6 +9,28 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+type user struct {
+	Id        int    `form:"id"`
+	Country   int    `form:"country"`
+	City      int    `form:"city"`
+	Username  string `form:"username"`
+	Email     string `form:"email"`
+	Title     string `form:"title"`
+	About     string `form:"about"`
+	Sex       uint8  `form:"sex"`
+	Age       uint8  `form:"age"`
+	Height    uint8  `form:"height"`
+	Weight    uint8  `form:"weight"`
+	Body      uint8  `form:"body"`
+	Smokes    uint8  `form:"smokes"`
+	Drinks    uint8  `form:"drinks"`
+	Ethnicity uint8  `form:"ethnicity"`
+	Search    uint8  `form:"search"`
+	Income    uint8  `form:"income"`
+	Children  uint8  `form:"children"`
+	Industry  uint8  `form:"industry"`
+}
+
 func ChangeAbout(text string, c gin.Context) error {
 	id, _ := c.Cookie("id")
 	len := len(text)

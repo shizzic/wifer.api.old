@@ -11,17 +11,12 @@ import (
 	"gopkg.in/gomail.v2"
 )
 
-// cookie, err := c.Cookie("token")
-// c.SetSameSite(4)
-// c.SetSameSite(h.SameSiteNoneMode)
-// c.SetCookie("token", "here'll be token", 120, "/", "https://wifer-test.ru", true, true)
-
 func SendCode(to, code string) error {
 	m := gomail.NewMessage()
 	m.SetHeader("From", "Wifer <admin@"+domainBack+">")
 	m.SetHeader("To", to)
 	m.SetHeader("Subject", "Confirm registration")
-	m.SetBody("text/html", "<p>Your code</p><h1>"+code+"</h1>")
+	m.SetBody("text/html", "<p>Your code:</p><h1>"+code+"</h1><p>Just put this code in form on my website to sign in :)</p>")
 	d := gomail.NewDialer("skvmrelay.netangels.ru", 25, "admin@"+domainBack, emailPass)
 	d.TLSConfig = &tls.Config{InsecureSkipVerify: true}
 

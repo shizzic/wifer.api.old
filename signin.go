@@ -2,30 +2,41 @@ package main
 
 import (
 	"errors"
-	"regexp"
+	h "net/http"
 	"strconv"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-func Signin(data user) error {
-	if !IsEmailValid(data.Email) {
-		return errors.New("0")
+type signin struct {
+	ID     string `form:"id"`
+	Token  string `form:"token"`
+	Email  string `form:"email"`
+	Method string `form:"method"`
+	Api    bool   `form:"api"`
+}
+
+func Signin(email string, c gin.Context, api bool) (int, error) {
+	if !IsEmailValid(email) {
+		return 0, errors.New("1")
 	}
 
 	code := MakeCode()
 
 	var user bson.M
-	opts := options.FindOne().SetProjection(bson.M{"_id": 1, "active": 1})
+	opts := options.FindOne().SetProjection(bson.M{"_id": 1, "username": 1, "email": 1, "active": 1})
+	notFound := users.FindOne(ctx, bson.M{"email": email}, opts).Decode(&user)
 
-	if err := users.FindOne(ctx, bson.M{"email": data.Email}, opts).Decode(&user); err == nil {
-		if user["active"] != true {
-			if r, err := ensure.UpdateOne(ctx, bson.M{"_id": user["_id"]}, bson.D{
-				{Key: "$set", Value: bson.D{{Key: "code", Value: code}}},
-			}); err != nil || r.ModifiedCount == 0 {
-				return errors.New("1")
+	if notFound == nil {
+		if api {
+			MakeCookies(strconv.Itoa(int(user["_id"].(int32))), user["username"].(string), c)
+			return int(user["_id"].(int32)), nil
+		} else {
+			if err := SendCode(email, code); err != nil {
+				return 0, errors.New("2")
 			}
 		}
 	} else {
@@ -35,14 +46,14 @@ func Signin(data user) error {
 		users.FindOne(ctx, bson.M{}, opts).Decode(&last)
 		id := 1
 		if last["_id"] != nil {
-			id = last["_id"].(int) + 1
+			id = int(last["_id"].(int32)) + 1
 		}
 		date := time.Now().Unix()
 
 		ObjectId, err := users.InsertOne(ctx, bson.D{
 			{Key: "_id", Value: id},
 			{Key: "username", Value: strconv.Itoa(id)},
-			{Key: "email", Value: data.Email},
+			{Key: "email", Value: email},
 			{Key: "title", Value: ""},
 			{Key: "about", Value: ""},
 			{Key: "sex", Value: 0},
@@ -58,8 +69,8 @@ func Signin(data user) error {
 			{Key: "children", Value: 0},
 			{Key: "industry", Value: 0},
 			{Key: "premium", Value: 0},
-			{Key: "status", Value: true},
-			{Key: "active", Value: false},
+			{Key: "status", Value: api},
+			{Key: "active", Value: true},
 			{Key: "avatar", Value: false},
 			{Key: "public", Value: 0},
 			{Key: "private", Value: 0},
@@ -69,42 +80,57 @@ func Signin(data user) error {
 		})
 
 		if err != nil {
-			return errors.New("2")
+			return 0, errors.New("3")
 		}
 
-		if _, err := ensure.InsertOne(ctx, bson.D{
-			{Key: "_id", Value: ObjectId.InsertedID},
-			{Key: "code", Value: code},
-		}); err != nil {
-			return errors.New("3")
-		}
+		if api {
+			MakeCookies(strconv.Itoa(int(ObjectId.InsertedID.(int32))), strconv.Itoa(int(ObjectId.InsertedID.(int32))), c)
+			return int(ObjectId.InsertedID.(int32)), nil
+		} else {
+			if _, err := ensure.InsertOne(ctx, bson.D{
+				{Key: "_id", Value: ObjectId.InsertedID},
+				{Key: "code", Value: code},
+			}); err != nil {
+				return 0, errors.New("4")
+			}
 
-		if err := SendCode(data.Email, code); err != nil {
-			return errors.New("4")
+			if err := SendCode(email, code); err != nil {
+				return 0, errors.New("2")
+			}
 		}
 	}
 
-	return nil
+	return 0, nil
 }
 
-func checkCode() error {
-	return nil
-}
+func CheckApi(data signin, c gin.Context) (int, error) {
+	var email string
+	var err error
 
-// Check email on valid
-func IsEmailValid(email string) bool {
-	if len(email) < 3 || len(email) > 320 {
-		return false
+	switch data.Method {
+	case "Google":
+		email, err = isGoogle(data.ID, data.Token)
+	case "Facebook":
+		email, err = isFacebook(data.ID, data.Token)
 	}
 
-	return regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+\\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$").MatchString(email)
-}
-
-// Check username on valid
-func IsUsernameValid(username string) bool {
-	if len(username) < 3 || len(username) > 20 {
-		return true
+	if err != nil {
+		return 0, errors.New("0")
 	}
 
-	return regexp.MustCompile(`\s`).MatchString(username)
+	id, err := Signin(email, c, true)
+
+	if err != nil {
+		return id, errors.New(err.Error())
+	}
+
+	return id, nil
+}
+
+// Cookies for
+func MakeCookies(id, username string, c gin.Context) {
+	c.SetSameSite(h.SameSiteNoneMode)
+	c.SetCookie("token", EncryptToken(username), 86400*120, "/", domainBack, true, true)
+	c.SetCookie("username", username, 86400*120, "/", domainBack, true, true)
+	c.SetCookie("id", id, 86400*120, "/", domainBack, true, true)
 }

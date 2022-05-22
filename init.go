@@ -28,28 +28,6 @@ const mongoConnect string = "mongodb://shizzic:WebDev77@wifer-test.ru:27017/test
 
 // mongodump "mongodb://shizzic:WebDev77@wifer-test.ru:27017/wifer?authSource=admin&readPreference=primary&appname=MongoDB%20Compass&directConnection=true&ssl=false" -d wifer -o /var/www/default/site
 
-type user struct {
-	Id        int    `form:"id"`
-	Country   int    `form:"country"`
-	City      int    `form:"city"`
-	Username  string `form:"username"`
-	Email     string `form:"email"`
-	Title     string `form:"title"`
-	About     string `form:"about"`
-	Sex       uint8  `form:"sex"`
-	Age       uint8  `form:"age"`
-	Height    uint8  `form:"height"`
-	Weight    uint8  `form:"weight"`
-	Body      uint8  `form:"body"`
-	Smokes    uint8  `form:"smokes"`
-	Drinks    uint8  `form:"drinks"`
-	Ethnicity uint8  `form:"ethnicity"`
-	Search    uint8  `form:"search"`
-	Income    uint8  `form:"income"`
-	Children  uint8  `form:"children"`
-	Industry  uint8  `form:"industry"`
-}
-
 func connect() *mongo.Client {
 	client, err := mongo.NewClient(options.Client().ApplyURI(mongoConnect))
 	if err != nil {
