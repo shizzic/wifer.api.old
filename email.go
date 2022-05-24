@@ -4,45 +4,23 @@ import (
 	"crypto/tls"
 	"errors"
 
-	h "net/http"
-
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
 	"gopkg.in/gomail.v2"
 )
 
-func SendCode(to, code string) error {
+func SendCode(to, code, id string) error {
 	m := gomail.NewMessage()
 	m.SetHeader("From", "Wifer <admin@"+domainBack+">")
 	m.SetHeader("To", to)
 	m.SetHeader("Subject", "Confirm registration")
-	m.SetBody("text/html", "<p>Your code:</p><h1>"+code+"</h1><p>Just put this code in form on my website to sign in :)</p>")
+	m.SetBody("text/html", "<p><h1>Here is a link to sign in into wifer :)</h1></p><p><a href=\"http://localhost:8080/auth/"+id+"/"+code+"\">Enjoy</a></p>")
 	d := gomail.NewDialer("skvmrelay.netangels.ru", 25, "admin@"+domainBack, emailPass)
 	d.TLSConfig = &tls.Config{InsecureSkipVerify: true}
 
 	if err := d.DialAndSend(m); err != nil {
 		return err
 	}
-
-	return nil
-}
-
-// Activate user's account
-func EnsureEmail(username, token, id string, c gin.Context) error {
-	if r, err := ensure.DeleteOne(ctx, bson.M{"_id": id, "token": token}); err != nil || r.DeletedCount == 0 {
-		return errors.New("not found")
-	}
-
-	if r, err := users.UpdateOne(ctx, bson.M{"_id": id}, bson.D{
-		{Key: "$set", Value: bson.D{{Key: "active", Value: true}}},
-	}); err != nil || r.ModifiedCount == 0 {
-		return errors.New("document not updated")
-	}
-
-	c.SetSameSite(h.SameSiteNoneMode)
-	c.SetCookie("token", EncryptToken(username), 86400*60, "/", domainBack, true, true)
-	c.SetCookie("username", username, 86400*60, "/", domainBack, true, true)
-	c.SetCookie("id", id, 86400*60, "/", domainBack, true, true)
 
 	return nil
 }

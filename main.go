@@ -1,8 +1,6 @@
 package main
 
-import (
-	"github.com/gin-gonic/gin"
-)
+import "github.com/gin-gonic/gin"
 
 func main() {
 	setHeaders()
@@ -27,8 +25,14 @@ func main() {
 	})
 
 	r.POST("/checkCode", func(c *gin.Context) {
-		var data user
+		var data auth
 		c.Bind(&data)
+
+		if err := CheckCode(data.ID, data.Code, *c); err != nil {
+			c.JSON(401, gin.H{"error": err.Error()})
+		} else {
+			c.JSON(200, gin.H{"id": data.ID})
+		}
 	})
 
 	// Delete all user's data forever
@@ -130,11 +134,11 @@ func main() {
 		// 	c.String(200, username)
 		// }
 
-		if err := SendCode("kotcich@mail.ru", "123456"); err != nil {
-			c.String(500, "error")
-		} else {
-			c.String(200, "good")
-		}
+		// if err := SendCode("kotcich@mail.ru", "123456"); err != nil {
+		// 	c.String(500, "error")
+		// } else {
+		// 	c.String(200, "good")
+		// }
 	})
 
 	run()

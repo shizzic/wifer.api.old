@@ -2,7 +2,6 @@ package main
 
 import (
 	"errors"
-	h "net/http"
 	"strconv"
 	"time"
 
@@ -35,7 +34,7 @@ func Signin(email string, c gin.Context, api bool) (int, error) {
 			MakeCookies(strconv.Itoa(int(user["_id"].(int32))), user["username"].(string), c)
 			return int(user["_id"].(int32)), nil
 		} else {
-			if err := SendCode(email, code); err != nil {
+			if err := SendCode(email, code, strconv.Itoa(int(user["_id"].(int32)))); err != nil {
 				return 0, errors.New("2")
 			}
 		}
@@ -44,6 +43,7 @@ func Signin(email string, c gin.Context, api bool) (int, error) {
 		var last bson.M
 		opts = options.FindOne().SetProjection(bson.M{"_id": 1}).SetSort(bson.D{{Key: "_id", Value: -1}})
 		users.FindOne(ctx, bson.M{}, opts).Decode(&last)
+
 		id := 1
 		if last["_id"] != nil {
 			id = int(last["_id"].(int32)) + 1
@@ -84,17 +84,20 @@ func Signin(email string, c gin.Context, api bool) (int, error) {
 		}
 
 		if api {
-			MakeCookies(strconv.Itoa(int(ObjectId.InsertedID.(int32))), strconv.Itoa(int(ObjectId.InsertedID.(int32))), c)
+			id := strconv.Itoa(int(ObjectId.InsertedID.(int32)))
+			MakeCookies(id, id, c)
 			return int(ObjectId.InsertedID.(int32)), nil
 		} else {
 			if _, err := ensure.InsertOne(ctx, bson.D{
 				{Key: "_id", Value: ObjectId.InsertedID},
 				{Key: "code", Value: code},
 			}); err != nil {
-				return 0, errors.New("4")
+				// Delete new user, because code wasn't added
+				users.DeleteOne(ctx, bson.M{"_id": int(ObjectId.InsertedID.(int32))})
+				return 0, errors.New("3")
 			}
 
-			if err := SendCode(email, code); err != nil {
+			if err := SendCode(email, code, strconv.Itoa(int(ObjectId.InsertedID.(int32)))); err != nil {
 				return 0, errors.New("2")
 			}
 		}
@@ -125,12 +128,4 @@ func CheckApi(data signin, c gin.Context) (int, error) {
 	}
 
 	return id, nil
-}
-
-// Cookies for
-func MakeCookies(id, username string, c gin.Context) {
-	c.SetSameSite(h.SameSiteNoneMode)
-	c.SetCookie("token", EncryptToken(username), 86400*120, "/", domainBack, true, true)
-	c.SetCookie("username", username, 86400*120, "/", domainBack, true, true)
-	c.SetCookie("id", id, 86400*120, "/", domainBack, true, true)
 }

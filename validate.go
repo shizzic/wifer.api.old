@@ -9,8 +9,13 @@ import (
 	"google.golang.org/api/idtoken"
 )
 
-func checkCode() error {
-	return nil
+// Check if code from email valid for use
+func isCode(code string) bool {
+	if len(code) == 6 {
+		return true
+	}
+
+	return false
 }
 
 // Check email on valid

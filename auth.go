@@ -15,6 +15,11 @@ import (
 const nums = "1234567890"
 const letters = "1234567890_-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
+type auth struct {
+	ID   int    `form:"id"`
+	Code string `form:"code"`
+}
+
 func EncryptToken(username string) (token string) {
 	for i, char := range username {
 		if char%2 == 0 {
@@ -73,52 +78,42 @@ func Auth() gin.HandlerFunc {
 	}
 }
 
-// Login for Form from client side. Yea, i'm lil dick :D
-func Login(email, password string, c gin.Context) (string, error) {
+// Check code's fit for ensure
+func CheckCode(id int, code string, c gin.Context) error {
+	if !isCode(code) {
+		return errors.New("0")
+	}
+
+	var data bson.M
+	opts := options.FindOne().SetProjection(bson.M{"_id": 1})
+
+	if err := ensure.FindOne(ctx, bson.M{"_id": id, "code": code}, opts).Decode(&data); err != nil {
+		return errors.New("1")
+	}
+
+	// Delete document in ensure collection, if given code was valid
+	ensure.DeleteOne(ctx, bson.M{"_id": id, "code": code})
+
 	var user bson.M
-	opts := options.FindOne().SetProjection(bson.M{"_id": 1, "username": 1, "password_hash": 1, "status": 1, "active": 1, "avatar": 1})
+	opt := options.FindOne().SetProjection(bson.M{"username": 1})
 
-	if err := users.FindOne(ctx, bson.M{"email": email}, opts).Decode(&user); err != nil {
-		return "", errors.New("0")
+	if err := users.FindOne(ctx, bson.M{"_id": id}, opt).Decode(&user); err != nil {
+		return errors.New("2")
 	}
 
-	// Check if user ever ensure his account or ever been deleted
-	if user["active"] == false {
-		return "", errors.New("2")
-	} else if user["active"] == true && user["status"] == false {
-		if r, err := users.UpdateOne(ctx, bson.M{"_id": user["_id"]}, bson.D{
-			{Key: "$set", Value: bson.D{{Key: "status", Value: true}}},
-		}); err != nil || r.ModifiedCount == 0 {
-			return "", errors.New("3")
-		}
-	}
+	users.UpdateOne(ctx, bson.M{"_id": id}, bson.D{{Key: "$set", Value: bson.D{{Key: "status", Value: true}}}})
 
-	// create cookies
-	username := user["username"].(string)
-	id := strconv.Itoa(int(user["_id"].(int32)))
+	MakeCookies(strconv.Itoa(id), user["username"].(string), c)
 
-	c.SetSameSite(h.SameSiteNoneMode)
-	c.SetCookie("token", EncryptToken(username), 86400*60, "/", domainBack, true, true)
-	c.SetCookie("username", username, 86400*60, "/", domainBack, true, true)
-	c.SetCookie("id", id, 86400*60, "/", domainBack, true, true)
-
-	return id, nil
+	return nil
 }
 
-// Check code's fit for ensure
-func CheckCode(id int, code string) bool {
-	var data bson.M
-	opts := options.FindOne().SetProjection(bson.M{"code": 1})
-
-	if err := ensure.FindOne(ctx, bson.M{"_id": id}, opts).Decode(&data); err != nil {
-		return false
-	}
-
-	if data["code"] != code {
-		return false
-	}
-
-	return true
+// Cookies for auth
+func MakeCookies(id, username string, c gin.Context) {
+	c.SetSameSite(h.SameSiteNoneMode)
+	c.SetCookie("token", EncryptToken(username), 86400*120, "/", domainBack, true, true)
+	c.SetCookie("username", username, 86400*120, "/", domainBack, true, true)
+	c.SetCookie("id", id, 86400*120, "/", domainBack, true, true)
 }
 
 // Make token for auth any email operations or something :)
