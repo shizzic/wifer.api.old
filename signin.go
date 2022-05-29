@@ -75,6 +75,8 @@ func Signin(email string, c gin.Context, api bool) (int, error) {
 			{Key: "public", Value: 0},
 			{Key: "private", Value: 0},
 			{Key: "created_at", Value: date},
+			{Key: "last_time", Value: date},
+			{Key: "online", Value: false},
 			{Key: "country_id", Value: 0},
 			{Key: "city_id", Value: 0},
 		})

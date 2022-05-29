@@ -35,6 +35,37 @@ func main() {
 		}
 	})
 
+	r.GET("/profile", func(c *gin.Context) {
+		var data user
+		c.Bind(&data)
+
+		if user, err := GetProfile(data.ID); err != nil {
+			c.JSON(404, gin.H{"error": err.Error()})
+		} else {
+			c.JSON(200, user)
+		}
+	})
+
+	r.PUT("/online", func(c *gin.Context) {
+		var data user
+		c.Bind(&data)
+		ChangeOnline(data.ID, data.Online)
+	})
+
+	// r.GET("/city", func(c *gin.Context) {
+	// 	var data user
+	// 	c.Bind(&data)
+	// 	city := GetCity(data.City)
+	// 	c.JSON(200, city)
+	// })
+
+	// r.GET("/country", func(c *gin.Context) {
+	// 	var data user
+	// 	c.Bind(&data)
+	// 	country := GetCountry(data.Country)
+	// 	c.JSON(200, country)
+	// })
+
 	// Delete all user's data forever
 	r.DELETE("/deleteAccount", Auth(), func(c *gin.Context) {
 		if err := DeleteAccount(c.PostForm("password"), *c); err != nil {

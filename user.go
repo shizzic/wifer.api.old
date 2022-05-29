@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	h "net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
@@ -10,7 +11,7 @@ import (
 )
 
 type user struct {
-	Id        int    `form:"id"`
+	ID        int    `form:"id"`
 	Country   int    `form:"country"`
 	City      int    `form:"city"`
 	Username  string `form:"username"`
@@ -29,6 +30,15 @@ type user struct {
 	Income    uint8  `form:"income"`
 	Children  uint8  `form:"children"`
 	Industry  uint8  `form:"industry"`
+	Online    bool   `form:"online"`
+}
+
+// Change when user open my website last time
+func ChangeOnline(id int, value bool) {
+	users.UpdateOne(ctx, bson.M{"_id": id}, bson.D{
+		{Key: "$set", Value: bson.D{{Key: "online", Value: value}}},
+		{Key: "$set", Value: bson.D{{Key: "last_time", Value: time.Now().Unix()}}},
+	})
 }
 
 func ChangeAbout(text string, c gin.Context) error {
