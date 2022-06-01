@@ -58,13 +58,19 @@ func GetProfile(id int) (bson.M, error) {
 	return user, nil
 }
 
-// func GetCity(id int) bson.M {
-// 	var user bson.M
-// 	opts := options.FindOne().SetProjection(bson.M{"username": 1, "title": 1, "about": 1, "sex": 1, "age": 1, "body": 1, "height": 1, "weight": 1, "smokes": 1, "drinks": 1, "ethnicity": 1, "search": 1, "income": 1, "children": 1, "industry": 1, "premium": 1, "active": 1, "avatar": 1, "public": 1, "private": 1, "created_at": 1, "last_time": 1, "online": 1, "country_id": 1, "city_id": 1})
+func GetCountries() []bson.M {
+	var data []bson.M
+	cursor, _ := countries.Find(ctx, bson.M{})
+	cursor.All(ctx, &data)
 
-// 	if err := cities.FindOne(ctx, bson.M{"_id": id}, opts).Decode(&user); err != nil {
-// 		return user, errors.New("0")
-// 	}
+	return data
+}
 
-// 	return user, nil
-// }
+func GetCities(country_id int) []bson.M {
+	var data []bson.M
+	opts := options.Find().SetProjection(bson.M{"_id": 1, "title": 1})
+	cursor, _ := cities.Find(ctx, bson.M{"country_id": country_id}, opts)
+	cursor.All(ctx, &data)
+
+	return data
+}

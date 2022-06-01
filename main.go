@@ -52,19 +52,17 @@ func main() {
 		ChangeOnline(data.ID, data.Online)
 	})
 
-	// r.GET("/city", func(c *gin.Context) {
-	// 	var data user
-	// 	c.Bind(&data)
-	// 	city := GetCity(data.City)
-	// 	c.JSON(200, city)
-	// })
+	r.GET("/country", func(c *gin.Context) {
+		countries := GetCountries()
+		c.JSON(200, countries)
+	})
 
-	// r.GET("/country", func(c *gin.Context) {
-	// 	var data user
-	// 	c.Bind(&data)
-	// 	country := GetCountry(data.Country)
-	// 	c.JSON(200, country)
-	// })
+	r.GET("/city", func(c *gin.Context) {
+		var data user
+		c.Bind(&data)
+		cities := GetCities(data.Country)
+		c.JSON(200, cities)
+	})
 
 	// Delete all user's data forever
 	r.DELETE("/deleteAccount", Auth(), func(c *gin.Context) {
