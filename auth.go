@@ -20,6 +20,22 @@ type auth struct {
 	Code string `form:"code"`
 }
 
+// check if user loged in
+func Auth() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		if token, err := c.Cookie("token"); err == nil {
+			if username, e := c.Cookie("username"); e == nil {
+				if DecryptToken(token) == username {
+					c.Next()
+					return
+				}
+			}
+		}
+
+		c.AbortWithStatus(401)
+	}
+}
+
 func EncryptToken(username string) (token string) {
 	for i, char := range username {
 		if char%2 == 0 {
@@ -62,22 +78,6 @@ func DecryptToken(token string) (username string) {
 	return
 }
 
-// check if user loged in
-func Auth() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		if token, err := c.Cookie("token"); err == nil {
-			if username, e := c.Cookie("username"); e == nil {
-				if DecryptToken(token) == username {
-					c.Next()
-					return
-				}
-			}
-		}
-
-		c.AbortWithStatus(401)
-	}
-}
-
 // Check code's fit for ensure
 func CheckCode(id int, code string, c gin.Context) error {
 	if !isCode(code) {
@@ -111,9 +111,9 @@ func CheckCode(id int, code string, c gin.Context) error {
 // Cookies for auth
 func MakeCookies(id, username string, c gin.Context) {
 	c.SetSameSite(h.SameSiteNoneMode)
-	c.SetCookie("token", EncryptToken(username), 86400*120, "/", domainBack, true, true)
-	c.SetCookie("username", username, 86400*120, "/", domainBack, true, true)
-	c.SetCookie("id", id, 86400*120, "/", domainBack, true, true)
+	c.SetCookie("token", EncryptToken(username), 86400*120, "/", "*."+domainBack, true, true)
+	c.SetCookie("username", username, 86400*120, "/", "*."+domainBack, true, true)
+	c.SetCookie("id", id, 86400*120, "/", "*."+domainBack, true, true)
 }
 
 // Make token for auth any email operations or something :)

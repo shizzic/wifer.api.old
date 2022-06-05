@@ -132,8 +132,11 @@ func main() {
 	})
 
 	r.POST("/upload", Auth(), func(c *gin.Context) {
-		UploadImage(c.PostForm("dir"), *c)
-		c.String(200, "nice")
+		if err := UploadImage(c.PostForm("dir"), *c); err != nil {
+			c.JSON(500, gin.H{"error": err.Error()})
+		} else {
+			c.JSON(200, gin.H{})
+		}
 	})
 
 	r.PUT("/changeImageDir", Auth(), func(c *gin.Context) {

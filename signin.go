@@ -34,6 +34,12 @@ func Signin(email string, c gin.Context, api bool) (int, error) {
 			MakeCookies(strconv.Itoa(int(user["_id"].(int32))), user["username"].(string), c)
 			return int(user["_id"].(int32)), nil
 		} else {
+			ensure.DeleteOne(ctx, bson.M{"_id": user["_id"]})
+			ensure.InsertOne(ctx, bson.D{
+				{Key: "_id", Value: user["_id"]},
+				{Key: "code", Value: code},
+			})
+
 			if err := SendCode(email, code, strconv.Itoa(int(user["_id"].(int32)))); err != nil {
 				return 0, errors.New("2")
 			}
