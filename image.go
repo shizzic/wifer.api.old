@@ -151,7 +151,7 @@ func UpdateDataBaseImages(id int, dir string, isAvatar, avatar, both bool, quant
 // Resize each uploaded image to 1 size format and convert each image to WEBP
 func ConvertResize(dir string) {
 	buffer, _ := bimg.Read(dir)
-	newImage, _ := bimg.NewImage(buffer).Resize(750, 1000)
-	new, _ := bimg.NewImage(newImage).Convert(bimg.WEBP)
+	// newImage, _ := bimg.NewImage(buffer).Resize(750, 1000)
+	new, _ := bimg.NewImage(buffer).Convert(bimg.WEBP)
 	bimg.Write(dir, new)
 }
