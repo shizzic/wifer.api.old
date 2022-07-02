@@ -141,17 +141,17 @@ func main() {
 
 	r.PUT("/changeImageDir", Auth(), func(c *gin.Context) {
 		ChangeImageDir(c.Query("isAvatar"), c.Query("dir"), c.Query("new"), c.Query("number"), *c)
-		c.String(200, "nice")
+		c.JSON(200, "chanched")
 	})
 
 	r.PUT("/replaceAvatar", Auth(), func(c *gin.Context) {
 		ReplaceAvatar(c.Query("dir"), c.Query("number"), *c)
-		c.String(200, "nice")
+		c.JSON(200, "replaced")
 	})
 
 	r.DELETE("/deleteImage", Auth(), func(c *gin.Context) {
 		DeleteImage(c.Query("isAvatar"), c.Query("dir"), c.Query("number"), *c)
-		c.String(200, "nice")
+		c.JSON(200, "deleted")
 	})
 
 	r.GET("/test", func(c *gin.Context) {
