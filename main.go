@@ -154,6 +154,16 @@ func main() {
 		c.JSON(200, "deleted")
 	})
 
+	r.GET("/translate", func(c *gin.Context) {
+		text, err := Translate(c.Query("text"), c.Query("lang"))
+
+		if err != nil {
+			c.JSON(500, gin.H{"error": "0"})
+		} else {
+			c.JSON(200, gin.H{"text": text})
+		}
+	})
+
 	r.GET("/test", func(c *gin.Context) {
 		// cursor, _ := cities.Find(ctx, bson.M{"country_id": 231})
 		// var data []bson.M
