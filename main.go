@@ -64,6 +64,17 @@ func main() {
 		c.JSON(200, cities)
 	})
 
+	r.PUT("/change", Auth(), func(c *gin.Context) {
+		var data user
+		c.Bind(&data)
+
+		if err := Change(data, *c); err != nil {
+			c.JSON(400, gin.H{"error": err.Error()})
+		} else {
+			c.JSON(200, gin.H{})
+		}
+	})
+
 	// Delete all user's data forever
 	r.DELETE("/deleteAccount", Auth(), func(c *gin.Context) {
 		if err := DeleteAccount(c.PostForm("password"), *c); err != nil {
@@ -89,41 +100,6 @@ func main() {
 	// 		c.String(200, "account restored")
 	// 	}
 	// })
-
-	r.PUT("/changeTitle", Auth(), func(c *gin.Context) {
-		if err := ChangeTitle(c.PostForm("new"), *c); err != nil {
-			c.String(400, err.Error())
-		} else {
-			c.String(200, "title changed")
-		}
-	})
-
-	r.PUT("/changeUsername", Auth(), func(c *gin.Context) {
-		if err := ChangeUsername(c.PostForm("new"), *c); err != nil {
-			c.String(400, err.Error())
-		} else {
-			c.String(200, "username changed")
-		}
-	})
-
-	r.PUT("/changeParams", Auth(), func(c *gin.Context) {
-		var data user
-		c.Bind(&data)
-
-		if err := ChangeParams(data, *c); err != nil {
-			c.String(400, err.Error())
-		} else {
-			c.String(200, "Params changed")
-		}
-	})
-
-	r.PUT("/changeAbout", Auth(), func(c *gin.Context) {
-		if err := ChangeAbout(c.PostForm("text"), *c); err != nil {
-			c.String(400, err.Error())
-		} else {
-			c.String(200, "About changed")
-		}
-	})
 
 	r.GET("/getUsers", Auth(), func(c *gin.Context) {
 		var data List
@@ -165,22 +141,7 @@ func main() {
 	})
 
 	r.GET("/test", func(c *gin.Context) {
-		// cursor, _ := cities.Find(ctx, bson.M{"country_id": 231})
-		// var data []bson.M
-		// cursor.All(ctx, &data)
-		// c.JSON(200, data)
 
-		// if username, e := c.Cookie("username"); e != nil {
-		// 	c.String(500, "error")
-		// } else {
-		// 	c.String(200, username)
-		// }
-
-		// if err := SendCode("kotcich@mail.ru", "123456"); err != nil {
-		// 	c.String(500, "error")
-		// } else {
-		// 	c.String(200, "good")
-		// }
 	})
 
 	run()
