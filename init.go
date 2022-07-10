@@ -6,6 +6,7 @@ import (
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -79,4 +80,10 @@ func setHeaders() {
 func run() {
 	go r.RunTLS(serverID+":443", "/etc/ssl/wifer-test/__wifer-test_ru.full.crt", "/etc/ssl/wifer-test/__wifer-test_ru.key")
 	http.Run(serverID + ":80")
+}
+
+func clearOnline() {
+	users.UpdateMany(ctx, bson.M{"online": true},
+		bson.D{{Key: "$set", Value: bson.D{{Key: "online", Value: false}}}},
+	)
 }
