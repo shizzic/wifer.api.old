@@ -88,6 +88,10 @@ func Change(data user, c gin.Context) error {
 	title := strings.TrimSpace(data.Title)
 	about := strings.TrimSpace(data.About)
 
+	if available := CheckUsernameAvailable(username); !available {
+		return errors.New("1")
+	}
+
 	if r, err := users.UpdateOne(ctx, bson.M{"_id": idInt}, bson.D{
 		{Key: "$set", Value: bson.D{{Key: "username", Value: username}}},
 		{Key: "$set", Value: bson.D{{Key: "title", Value: title}}},
@@ -105,7 +109,7 @@ func Change(data user, c gin.Context) error {
 		{Key: "$set", Value: bson.D{{Key: "industry", Value: data.Industry}}},
 		{Key: "$set", Value: bson.D{{Key: "ethnicity", Value: data.Ethnicity}}},
 	}); err != nil || r.ModifiedCount == 0 {
-		return errors.New("1")
+		return errors.New("2")
 	}
 
 	c.SetSameSite(h.SameSiteNoneMode)
@@ -169,4 +173,14 @@ func DiactivateAccount(password string, c gin.Context) error {
 	c.SetCookie("id", "", -1, "/", "wifer-test.ru", true, true)
 
 	return nil
+}
+
+func CheckUsernameAvailable(username string) bool {
+	var data bson.M
+	opts := options.FindOne().SetProjection(bson.M{"username": 1})
+	if err := users.FindOne(ctx, bson.M{"username": username}, opts).Decode(&data); err == nil {
+		return false
+	}
+
+	return true
 }

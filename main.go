@@ -1,6 +1,10 @@
 package main
 
-import "github.com/gin-gonic/gin"
+import (
+	"strings"
+
+	"github.com/gin-gonic/gin"
+)
 
 func main() {
 	clearOnline()
@@ -73,6 +77,15 @@ func main() {
 			c.JSON(400, gin.H{"error": err.Error()})
 		} else {
 			c.JSON(200, gin.H{})
+		}
+	})
+
+	r.GET("/checkUsername", Auth(), func(c *gin.Context) {
+		username := strings.TrimSpace(c.Query("username"))
+
+		if IsUsernameValid(username) {
+			result := CheckUsernameAvailable(c.Query("username"))
+			c.JSON(200, result)
 		}
 	})
 

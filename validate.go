@@ -43,12 +43,12 @@ func isCode(code string) bool {
 	return false
 }
 
-func IsEmailValid(email string) bool {
-	if len(email) < 3 || len(email) > 320 {
+func IsEmailValid(value string) bool {
+	if len(value) < 3 || len(value) > 320 {
 		return false
 	}
 
-	return regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+\\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$").MatchString(email)
+	return regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+\\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$").MatchString(value)
 }
 
 func IsUsernameValid(value string) bool {
