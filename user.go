@@ -85,11 +85,14 @@ func Change(data user, c gin.Context) error {
 	id, _ := c.Cookie("id")
 	idInt, _ := strconv.Atoi(id)
 	username := strings.TrimSpace(data.Username)
+	cookUsername, _ := c.Cookie("username")
 	title := strings.TrimSpace(data.Title)
 	about := strings.TrimSpace(data.About)
 
-	if available := CheckUsernameAvailable(username); !available {
-		return errors.New("1")
+	if cookUsername != username {
+		if available := CheckUsernameAvailable(username); !available {
+			return errors.New("1")
+		}
 	}
 
 	if r, err := users.UpdateOne(ctx, bson.M{"_id": idInt}, bson.D{
