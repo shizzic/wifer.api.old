@@ -14,8 +14,8 @@ import (
 
 type user struct {
 	ID        int    `form:"id"`
-	Country   int    `form:"country"`
-	City      int    `form:"city"`
+	Country   int    `form:"country_id"`
+	City      int    `form:"city_id"`
 	Username  string `form:"username"`
 	Email     string `form:"email"`
 	Title     string `form:"title"`
@@ -111,6 +111,8 @@ func Change(data user, c gin.Context) error {
 		{Key: "$set", Value: bson.D{{Key: "children", Value: data.Children}}},
 		{Key: "$set", Value: bson.D{{Key: "industry", Value: data.Industry}}},
 		{Key: "$set", Value: bson.D{{Key: "ethnicity", Value: data.Ethnicity}}},
+		{Key: "$set", Value: bson.D{{Key: "country_id", Value: data.Country}}},
+		{Key: "$set", Value: bson.D{{Key: "city_id", Value: data.City}}},
 	}); err != nil || r.ModifiedCount == 0 {
 		return errors.New("2")
 	}
