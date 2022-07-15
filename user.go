@@ -95,7 +95,7 @@ func Change(data user, c gin.Context) error {
 		}
 	}
 
-	if r, err := users.UpdateOne(ctx, bson.M{"_id": idInt}, bson.D{
+	if _, err := users.UpdateOne(ctx, bson.M{"_id": idInt}, bson.D{
 		{Key: "$set", Value: bson.D{{Key: "username", Value: username}}},
 		{Key: "$set", Value: bson.D{{Key: "title", Value: title}}},
 		{Key: "$set", Value: bson.D{{Key: "about", Value: about}}},
@@ -113,7 +113,7 @@ func Change(data user, c gin.Context) error {
 		{Key: "$set", Value: bson.D{{Key: "ethnicity", Value: data.Ethnicity}}},
 		{Key: "$set", Value: bson.D{{Key: "country_id", Value: data.Country}}},
 		{Key: "$set", Value: bson.D{{Key: "city_id", Value: data.City}}},
-	}); err != nil || r.ModifiedCount == 0 {
+	}); err != nil {
 		return errors.New("2")
 	}
 
