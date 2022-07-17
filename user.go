@@ -29,6 +29,7 @@ type user struct {
 	Drinks    int    `form:"drinks"`
 	Ethnicity int    `form:"ethnicity"`
 	Search    int    `form:"search"`
+	Prefer    int    `form:"prefer"`
 	Income    int    `form:"income"`
 	Children  int    `form:"children"`
 	Industry  int    `form:"industry"`
@@ -78,6 +79,9 @@ func Change(data user, c gin.Context) error {
 	if !IsSearchValid(data.Search) {
 		return errors.New("0")
 	}
+	if !IsPreferValid(data.Prefer) {
+		return errors.New("0")
+	}
 	if !IsChildrenValid(data.Children) {
 		return errors.New("0")
 	}
@@ -107,6 +111,7 @@ func Change(data user, c gin.Context) error {
 		{Key: "$set", Value: bson.D{{Key: "smokes", Value: data.Smokes}}},
 		{Key: "$set", Value: bson.D{{Key: "drinks", Value: data.Drinks}}},
 		{Key: "$set", Value: bson.D{{Key: "search", Value: data.Search}}},
+		{Key: "$set", Value: bson.D{{Key: "prefer", Value: data.Prefer}}},
 		{Key: "$set", Value: bson.D{{Key: "income", Value: data.Income}}},
 		{Key: "$set", Value: bson.D{{Key: "children", Value: data.Children}}},
 		{Key: "$set", Value: bson.D{{Key: "industry", Value: data.Industry}}},
