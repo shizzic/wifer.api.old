@@ -4,7 +4,6 @@ import (
 	"crypto/tls"
 	"errors"
 
-	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
 	"gopkg.in/gomail.v2"
 )
@@ -38,19 +37,19 @@ func EnsureDelete(id, token string) error {
 	return nil
 }
 
-// Send link to new user's email
-func SendChangeEmail(oldEmail, newEmail string, c gin.Context) {
-	id, _ := c.Cookie("id")
-	username, _ := c.Cookie("username")
-	token := MakeCode()
-	ensure.InsertOne(ctx, bson.D{{Key: "_id", Value: id}, {Key: "token", Value: token}})
+// // Send link to new user's email
+// func SendChangeEmail(oldEmail, newEmail string, c gin.Context) {
+// 	id, _ := c.Cookie("id")
+// 	username, _ := c.Cookie("username")
+// 	token := MakeCode()
+// 	ensure.InsertOne(ctx, bson.D{{Key: "_id", Value: id}, {Key: "token", Value: token}})
 
-	m := gomail.NewMessage()
-	m.SetHeader("From", "Wifer <admin@"+domainBack+">")
-	m.SetHeader("To", newEmail)
-	m.SetHeader("Subject", "Password change")
-	m.SetBody("text/html", "<p>Hello dear <b>"+username+"</b>. Just follow link below to confirm your new email.</p><a href='"+domainClient+"/changePassword/"+id+"/"+token+"/"+newEmail+"'>Confirm</a>")
-	d := gomail.NewDialer("skvmrelay.netangels.ru", 25, "admin@"+domainBack, emailPass)
-	d.TLSConfig = &tls.Config{InsecureSkipVerify: true}
-	d.DialAndSend(m)
-}
+// 	m := gomail.NewMessage()
+// 	m.SetHeader("From", "Wifer <admin@"+domainBack+">")
+// 	m.SetHeader("To", newEmail)
+// 	m.SetHeader("Subject", "Password change")
+// 	m.SetBody("text/html", "<p>Hello dear <b>"+username+"</b>. Just follow link below to confirm your new email.</p><a href='"+domainClient+"/changePassword/"+id+"/"+token+"/"+newEmail+"'>Confirm</a>")
+// 	d := gomail.NewDialer("skvmrelay.netangels.ru", 25, "admin@"+domainBack, emailPass)
+// 	d.TLSConfig = &tls.Config{InsecureSkipVerify: true}
+// 	d.DialAndSend(m)
+// }

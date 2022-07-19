@@ -138,52 +138,52 @@ func ChangeOnline(id int, value bool) {
 }
 
 // Delete account forever
-func DeleteAccount(password string, c gin.Context) error {
-	id, _ := c.Cookie("id")
-	username, _ := c.Cookie("username")
-	var user bson.M
-	opts := options.FindOne().SetProjection(bson.M{"password_hash": 1})
+// func DeleteAccount(password string, c gin.Context) error {
+// 	id, _ := c.Cookie("id")
+// 	username, _ := c.Cookie("username")
+// 	var user bson.M
+// 	opts := options.FindOne().SetProjection(bson.M{"password_hash": 1})
 
-	if err := users.FindOne(ctx, bson.M{"username": username}, opts).Decode(&user); err != nil {
-		return errors.New("account not deleted")
-	}
+// 	if err := users.FindOne(ctx, bson.M{"username": username}, opts).Decode(&user); err != nil {
+// 		return errors.New("account not deleted")
+// 	}
 
-	if r, err := users.DeleteOne(ctx, bson.M{"_id": id, "username": username}); err != nil || r.DeletedCount == 0 {
-		return errors.New("account not deleted")
-	}
+// 	if r, err := users.DeleteOne(ctx, bson.M{"_id": id, "username": username}); err != nil || r.DeletedCount == 0 {
+// 		return errors.New("account not deleted")
+// 	}
 
-	// delete cookie
-	c.SetCookie("token", "", -1, "/", "wifer-test.ru", true, true)
-	c.SetCookie("username", "", -1, "/", "wifer-test.ru", true, true)
-	c.SetCookie("id", "", -1, "/", "wifer-test.ru", true, true)
+// 	// delete cookie
+// 	c.SetCookie("token", "", -1, "/", "wifer-test.ru", true, true)
+// 	c.SetCookie("username", "", -1, "/", "wifer-test.ru", true, true)
+// 	c.SetCookie("id", "", -1, "/", "wifer-test.ru", true, true)
 
-	return nil
-}
+// 	return nil
+// }
 
-// Set status to false for user
-func DiactivateAccount(password string, c gin.Context) error {
-	id, _ := c.Cookie("id")
-	username, _ := c.Cookie("username")
-	var user bson.M
-	opts := options.FindOne().SetProjection(bson.M{"password_hash": 1})
+// // Set status to false for user
+// func DiactivateAccount(password string, c gin.Context) error {
+// 	id, _ := c.Cookie("id")
+// 	username, _ := c.Cookie("username")
+// 	var user bson.M
+// 	opts := options.FindOne().SetProjection(bson.M{"password_hash": 1})
 
-	if err := users.FindOne(ctx, bson.M{"_id": id, "username": username}, opts).Decode(&user); err != nil {
-		return errors.New("account not frozen")
-	}
+// 	if err := users.FindOne(ctx, bson.M{"_id": id, "username": username}, opts).Decode(&user); err != nil {
+// 		return errors.New("account not frozen")
+// 	}
 
-	if r, err := users.UpdateOne(ctx, bson.M{"_id": id, "username": username}, bson.D{
-		{Key: "$set", Value: bson.D{{Key: "status", Value: false}}},
-	}); err != nil || r.ModifiedCount == 0 {
-		return errors.New("account not frozen")
-	}
+// 	if r, err := users.UpdateOne(ctx, bson.M{"_id": id, "username": username}, bson.D{
+// 		{Key: "$set", Value: bson.D{{Key: "status", Value: false}}},
+// 	}); err != nil || r.ModifiedCount == 0 {
+// 		return errors.New("account not frozen")
+// 	}
 
-	// delete cookie
-	c.SetCookie("token", "", -1, "/", "wifer-test.ru", true, true)
-	c.SetCookie("username", "", -1, "/", "wifer-test.ru", true, true)
-	c.SetCookie("id", "", -1, "/", "wifer-test.ru", true, true)
+// 	// delete cookie
+// 	c.SetCookie("token", "", -1, "/", "wifer-test.ru", true, true)
+// 	c.SetCookie("username", "", -1, "/", "wifer-test.ru", true, true)
+// 	c.SetCookie("id", "", -1, "/", "wifer-test.ru", true, true)
 
-	return nil
-}
+// 	return nil
+// }
 
 func CheckUsernameAvailable(username string) bool {
 	var data bson.M
@@ -193,4 +193,15 @@ func CheckUsernameAvailable(username string) bool {
 	}
 
 	return true
+}
+
+func CreateTemplates(text string, c gin.Context) {
+	id, _ := c.Cookie("id")
+	idInt, _ := strconv.Atoi(id)
+
+	templates.DeleteOne(ctx, bson.M{"_id": idInt})
+	templates.InsertOne(ctx, bson.D{
+		{Key: "_id", Value: idInt},
+		{Key: "data", Value: text},
+	})
 }

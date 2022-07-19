@@ -71,6 +71,7 @@ func Signin(email string, c gin.Context, api bool) (int, error) {
 			{Key: "drinks", Value: 0},
 			{Key: "ethnicity", Value: 0},
 			{Key: "search", Value: 0},
+			{Key: "prefer", Value: 0},
 			{Key: "income", Value: 0},
 			{Key: "children", Value: 0},
 			{Key: "industry", Value: 0},

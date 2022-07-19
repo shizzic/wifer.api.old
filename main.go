@@ -89,23 +89,32 @@ func main() {
 		}
 	})
 
-	// Delete all user's data forever
-	r.DELETE("/deleteAccount", Auth(), func(c *gin.Context) {
-		if err := DeleteAccount(c.PostForm("password"), *c); err != nil {
-			c.String(400, err.Error())
-		} else {
-			c.String(200, "account deleted")
-		}
+	r.POST("/templates", Auth(), func(c *gin.Context) {
+		CreateTemplates(c.PostForm("text"), *c)
 	})
 
-	// Delete user's data smootly
-	r.PUT("/deactivateAccount", Auth(), func(c *gin.Context) {
-		if err := DiactivateAccount(c.PostForm("password"), *c); err != nil {
-			c.String(400, err.Error())
-		} else {
-			c.String(200, "account frozen")
-		}
+	r.GET("/templates", Auth(), func(c *gin.Context) {
+		text := GetTemplates(*c)
+		c.JSON(200, text)
 	})
+
+	// Delete all user's data forever
+	// r.DELETE("/deleteAccount", Auth(), func(c *gin.Context) {
+	// 	if err := DeleteAccount(c.PostForm("password"), *c); err != nil {
+	// 		c.String(400, err.Error())
+	// 	} else {
+	// 		c.String(200, "account deleted")
+	// 	}
+	// })
+
+	// // Delete user's data smootly
+	// r.PUT("/deactivateAccount", Auth(), func(c *gin.Context) {
+	// 	if err := DiactivateAccount(c.PostForm("password"), *c); err != nil {
+	// 		c.String(400, err.Error())
+	// 	} else {
+	// 		c.String(200, "account frozen")
+	// 	}
+	// })
 
 	// r.DELETE("/restoreAccount", Auth(), func(c *gin.Context) {
 	// 	if err := DeleteAccount(c.PostForm("password"), *c); err != nil {
@@ -144,8 +153,8 @@ func main() {
 		c.JSON(200, "deleted")
 	})
 
-	r.GET("/translate", func(c *gin.Context) {
-		text, err := Translate(c.Query("text"), c.Query("lang"))
+	r.PUT("/translate", func(c *gin.Context) {
+		text, err := Translate(c.PostForm("text"), c.PostForm("lang"))
 
 		if err != nil {
 			c.JSON(500, gin.H{"error": "0"})

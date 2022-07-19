@@ -24,6 +24,7 @@ var users = con.Database("wifer").Collection("users")
 var ensure = con.Database("wifer").Collection("ensure")
 var countries = con.Database("wifer").Collection("countries")
 var cities = con.Database("wifer").Collection("cities")
+var templates = con.Database("wifer").Collection("templates")
 
 const mongoConnect string = "mongodb://shizzic:WebDev77@wifer-test.ru:27017/test?authSource=admin&readPreference=primary&appname=MongoDB%20Compass&directConnection=true&ssl=false"
 

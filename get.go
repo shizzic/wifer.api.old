@@ -2,7 +2,9 @@ package main
 
 import (
 	"errors"
+	"strconv"
 
+	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -73,4 +75,15 @@ func GetCities(country_id int) []bson.M {
 	cursor.All(ctx, &data)
 
 	return data
+}
+
+func GetTemplates(c gin.Context) bson.M {
+	id, _ := c.Cookie("id")
+	idInt, _ := strconv.Atoi(id)
+	var text bson.M
+
+	opts := options.FindOne().SetProjection(bson.M{"data": 1})
+	templates.FindOne(ctx, bson.M{"_id": idInt}, opts).Decode(&text)
+
+	return text
 }
