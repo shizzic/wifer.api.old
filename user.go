@@ -127,11 +127,47 @@ func Change(data user, c gin.Context) error {
 }
 
 // Change when user open my website last time
-func ChangeOnline(id int, value bool) {
-	users.UpdateOne(ctx, bson.M{"_id": id}, bson.D{
+func ChangeOnline(value bool, c gin.Context) {
+	id, _ := c.Cookie("id")
+	idInt, _ := strconv.Atoi(id)
+
+	users.UpdateOne(ctx, bson.M{"_id": idInt}, bson.D{
 		{Key: "$set", Value: bson.D{{Key: "online", Value: value}}},
 		{Key: "$set", Value: bson.D{{Key: "last_time", Value: time.Now().Unix()}}},
 	})
+}
+
+func CheckUsernameAvailable(username string) bool {
+	var data bson.M
+	opts := options.FindOne().SetProjection(bson.M{"username": 1})
+	if err := users.FindOne(ctx, bson.M{"username": username}, opts).Decode(&data); err == nil {
+		return false
+	}
+
+	return true
+}
+
+func CreateTemplates(text string, c gin.Context) {
+	id, _ := c.Cookie("id")
+	idInt, _ := strconv.Atoi(id)
+
+	templates.DeleteOne(ctx, bson.M{"_id": idInt})
+	templates.InsertOne(ctx, bson.D{
+		{Key: "_id", Value: idInt},
+		{Key: "data", Value: text},
+	})
+}
+
+func Logout(c gin.Context) {
+	id, _ := c.Cookie("id")
+	idInt, _ := strconv.Atoi(id)
+
+	users.UpdateOne(ctx, bson.M{"_id": idInt}, bson.D{
+		{Key: "$set", Value: bson.D{{Key: "online", Value: false}}},
+		{Key: "$set", Value: bson.D{{Key: "last_time", Value: time.Now().Unix()}}},
+	})
+
+	MakeCookies("", "", -1, c)
 }
 
 // Delete account forever
@@ -181,24 +217,3 @@ func ChangeOnline(id int, value bool) {
 
 // 	return nil
 // }
-
-func CheckUsernameAvailable(username string) bool {
-	var data bson.M
-	opts := options.FindOne().SetProjection(bson.M{"username": 1})
-	if err := users.FindOne(ctx, bson.M{"username": username}, opts).Decode(&data); err == nil {
-		return false
-	}
-
-	return true
-}
-
-func CreateTemplates(text string, c gin.Context) {
-	id, _ := c.Cookie("id")
-	idInt, _ := strconv.Atoi(id)
-
-	templates.DeleteOne(ctx, bson.M{"_id": idInt})
-	templates.InsertOne(ctx, bson.D{
-		{Key: "_id", Value: idInt},
-		{Key: "data", Value: text},
-	})
-}

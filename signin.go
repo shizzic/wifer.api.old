@@ -31,7 +31,7 @@ func Signin(email string, c gin.Context, api bool) (int, error) {
 
 	if notFound == nil {
 		if api {
-			MakeCookies(strconv.Itoa(int(user["_id"].(int32))), user["username"].(string), c)
+			MakeCookies(strconv.Itoa(int(user["_id"].(int32))), user["username"].(string), 86400*120, c)
 			return int(user["_id"].(int32)), nil
 		} else {
 			ensure.DeleteOne(ctx, bson.M{"_id": user["_id"]})
@@ -94,7 +94,7 @@ func Signin(email string, c gin.Context, api bool) (int, error) {
 
 		if api {
 			id := strconv.Itoa(int(ObjectId.InsertedID.(int32)))
-			MakeCookies(id, id, c)
+			MakeCookies(id, id, 86400*120, c)
 			return int(ObjectId.InsertedID.(int32)), nil
 		} else {
 			if _, err := ensure.InsertOne(ctx, bson.D{

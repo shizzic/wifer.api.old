@@ -103,17 +103,17 @@ func CheckCode(id int, code string, c gin.Context) error {
 
 	users.UpdateOne(ctx, bson.M{"_id": id}, bson.D{{Key: "$set", Value: bson.D{{Key: "status", Value: true}}}})
 
-	MakeCookies(strconv.Itoa(id), user["username"].(string), c)
+	MakeCookies(strconv.Itoa(id), user["username"].(string), 86400*120, c)
 
 	return nil
 }
 
 // Cookies for auth
-func MakeCookies(id, username string, c gin.Context) {
+func MakeCookies(id, username string, time int, c gin.Context) {
 	c.SetSameSite(h.SameSiteNoneMode)
-	c.SetCookie("token", EncryptToken(username), 86400*120, "/", "*."+domainBack, true, true)
-	c.SetCookie("username", username, 86400*120, "/", "*."+domainBack, true, true)
-	c.SetCookie("id", id, 86400*120, "/", "*."+domainBack, true, true)
+	c.SetCookie("token", EncryptToken(username), time, "/", "."+domainBack, true, true)
+	c.SetCookie("username", username, time, "/", "."+domainBack, true, true)
+	c.SetCookie("id", id, time, "/", "."+domainBack, true, true)
 }
 
 // Make token for auth any email operations or something :)

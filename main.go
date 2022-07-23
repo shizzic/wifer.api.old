@@ -40,6 +40,10 @@ func main() {
 		}
 	})
 
+	r.PUT("/logout", func(c *gin.Context) {
+		Logout(*c)
+	})
+
 	r.GET("/profile", func(c *gin.Context) {
 		var data user
 		c.Bind(&data)
@@ -51,10 +55,10 @@ func main() {
 		}
 	})
 
-	r.PUT("/online", func(c *gin.Context) {
+	r.PUT("/online", Auth(), func(c *gin.Context) {
 		var data user
 		c.Bind(&data)
-		ChangeOnline(data.ID, data.Online)
+		ChangeOnline(data.Online, *c)
 	})
 
 	r.GET("/country", func(c *gin.Context) {
