@@ -131,14 +131,6 @@ func IsIndustryValid(value int) bool {
 	return true
 }
 
-func IsSearchValid(value int) bool {
-	if value < 0 || value > 10 {
-		return false
-	}
-
-	return true
-}
-
 func IsPreferValid(value int) bool {
 	if value < 0 || value > 3 {
 		return false

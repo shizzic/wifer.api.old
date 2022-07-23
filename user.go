@@ -14,12 +14,12 @@ import (
 
 type user struct {
 	ID        int    `form:"id"`
-	Country   int    `form:"country_id"`
-	City      int    `form:"city_id"`
 	Username  string `form:"username"`
 	Email     string `form:"email"`
 	Title     string `form:"title"`
 	About     string `form:"about"`
+	Country   int    `json:"country_id"`
+	City      int    `json:"city_id"`
 	Sex       int    `form:"sex"`
 	Age       int    `form:"age"`
 	Height    int    `form:"height"`
@@ -28,7 +28,7 @@ type user struct {
 	Smokes    int    `form:"smokes"`
 	Drinks    int    `form:"drinks"`
 	Ethnicity int    `form:"ethnicity"`
-	Search    int    `form:"search"`
+	Search    []int  `form:"search"`
 	Prefer    int    `form:"prefer"`
 	Income    int    `form:"income"`
 	Children  int    `form:"children"`
@@ -74,9 +74,6 @@ func Change(data user, c gin.Context) error {
 		return errors.New("0")
 	}
 	if !IsIndustryValid(data.Industry) {
-		return errors.New("0")
-	}
-	if !IsSearchValid(data.Search) {
 		return errors.New("0")
 	}
 	if !IsPreferValid(data.Prefer) {
