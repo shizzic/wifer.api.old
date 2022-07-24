@@ -13,27 +13,29 @@ import (
 )
 
 type user struct {
-	ID        int    `form:"id"`
-	Username  string `form:"username"`
-	Email     string `form:"email"`
-	Title     string `form:"title"`
-	About     string `form:"about"`
-	Country   int    `json:"country_id"`
-	City      int    `json:"city_id"`
-	Sex       int    `form:"sex"`
-	Age       int    `form:"age"`
-	Height    int    `form:"height"`
-	Weight    int    `form:"weight"`
-	Body      int    `form:"body"`
-	Smokes    int    `form:"smokes"`
-	Drinks    int    `form:"drinks"`
-	Ethnicity int    `form:"ethnicity"`
-	Search    []int  `form:"search"`
-	Prefer    int    `form:"prefer"`
-	Income    int    `form:"income"`
-	Children  int    `form:"children"`
-	Industry  int    `form:"industry"`
-	Online    bool   `form:"online"`
+	ID         int    `form:"id"`
+	Username   string `form:"username"`
+	Email      string `form:"email"`
+	Title      string `form:"title"`
+	About      string `form:"about"`
+	Country_id int    `json:"country_id"`
+	City_id    int    `json:"city_id"`
+	Country    int    `form:"country_id"`
+	City       int    `form:"city_id"`
+	Sex        int    `form:"sex"`
+	Age        int    `form:"age"`
+	Height     int    `form:"height"`
+	Weight     int    `form:"weight"`
+	Body       int    `form:"body"`
+	Smokes     int    `form:"smokes"`
+	Drinks     int    `form:"drinks"`
+	Ethnicity  int    `form:"ethnicity"`
+	Search     []int  `form:"search"`
+	Prefer     int    `form:"prefer"`
+	Income     int    `form:"income"`
+	Children   int    `form:"children"`
+	Industry   int    `form:"industry"`
+	Online     bool   `form:"online"`
 }
 
 func Change(data user, c gin.Context) error {
@@ -113,8 +115,8 @@ func Change(data user, c gin.Context) error {
 		{Key: "$set", Value: bson.D{{Key: "children", Value: data.Children}}},
 		{Key: "$set", Value: bson.D{{Key: "industry", Value: data.Industry}}},
 		{Key: "$set", Value: bson.D{{Key: "ethnicity", Value: data.Ethnicity}}},
-		{Key: "$set", Value: bson.D{{Key: "country_id", Value: data.Country}}},
-		{Key: "$set", Value: bson.D{{Key: "city_id", Value: data.City}}},
+		{Key: "$set", Value: bson.D{{Key: "country_id", Value: data.Country_id}}},
+		{Key: "$set", Value: bson.D{{Key: "city_id", Value: data.City_id}}},
 	}); err != nil {
 		return errors.New("2")
 	}

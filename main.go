@@ -55,7 +55,7 @@ func main() {
 		}
 	})
 
-	r.PUT("/online", Auth(), func(c *gin.Context) {
+	r.POST("/online", Auth(), func(c *gin.Context) {
 		var data user
 		c.Bind(&data)
 		ChangeOnline(data.Online, *c)
@@ -76,6 +76,7 @@ func main() {
 	r.PUT("/change", Auth(), func(c *gin.Context) {
 		var data user
 		c.BindJSON(&data)
+		// c.JSON(200, data)
 
 		if err := Change(data, *c); err != nil {
 			c.JSON(400, gin.H{"error": err.Error()})
