@@ -129,10 +129,19 @@ func main() {
 	// 	}
 	// })
 
-	r.GET("/getUsers", Auth(), func(c *gin.Context) {
+	r.POST("/getUsers", func(c *gin.Context) {
 		var data List
-		c.ShouldBindJSON(&data)
-		c.JSON(200, GetUsers(data))
+		c.BindJSON(&data)
+		filter := PrepareFilter(data)
+
+		if data.Count {
+			c.JSON(200, gin.H{
+				"users": GetUsers(data, filter),
+				"count": CountUsers(filter),
+			})
+		} else {
+			c.JSON(200, gin.H{"users": GetUsers(data, filter)})
+		}
 	})
 
 	r.POST("/upload", Auth(), func(c *gin.Context) {

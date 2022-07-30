@@ -10,48 +10,98 @@ import (
 )
 
 type List struct {
-	Limit     int64  `json:"limit"`
-	Skip      int64  `json:"skip"`
-	SortKey   string `json:"sortKey"`
-	SortValue int64  `json:"sortValue"`
-	AgeMin    uint8  `json:"ageMin"`
-	AgeMax    uint8  `json:"ageMax"`
-	HeightMin uint8  `json:"heightMin"`
-	HeightMax uint8  `json:"heightMax"`
-	WeightMin uint8  `json:"weightMin"`
-	WeightMax uint8  `json:"weightMax"`
-	Body      []int8 `json:"body"`
-	Sex       []int8 `json:"sex"`
-	Smokes    []int8 `json:"smokes"`
-	Drinks    []int8 `json:"drinks"`
-	Ethnicity []int8 `json:"ethnicity"`
-	Search    []int8 `json:"search"`
-	Income    []int8 `json:"income"`
-	Children  []int8 `json:"children"`
-	Industry  []int8 `json:"industry"`
-	Premium   []bool `json:"premium"`
-	Text      string `json:"text"`
+	Limit       int64  `json:"limit"`
+	Skip        int64  `json:"skip"`
+	Sort        string `json:"sort"`
+	AgeMin      int    `json:"ageMin"`
+	AgeMax      int    `json:"ageMax"`
+	HeightMin   int    `json:"heightMin"`
+	HeightMax   int    `json:"heightMax"`
+	WeightMin   int    `json:"weightMin"`
+	WeightMax   int    `json:"weightMax"`
+	ChildrenMin int    `json:"childrenMin"`
+	ChildrenMax int    `json:"childrenMax"`
+	Body        []int  `json:"body"`
+	Sex         []int  `json:"sex"`
+	Smokes      []int  `json:"smokes"`
+	Drinks      []int  `json:"drinks"`
+	Ethnicity   []int  `json:"ethnicity"`
+	Search      []int  `json:"search"`
+	Income      []int  `json:"income"`
+	Industry    []int  `json:"industry"`
+	Premium     []int  `json:"premium"`
+	Prefer      []int  `json:"prefer"`
+	Country     []int  `json:"country"`
+	City        []int  `json:"city"`
+	Text        string `json:"text"`
+	IsAbout     bool   `json:"is_about"`
+	Count       bool   `json:"count"`
 }
 
 var list []bson.M
 
 // Fewer 40ms :D
-func GetUsers(data List) []bson.M {
-	opts := options.Find().SetProjection(bson.M{"username": 1, "title": 1, "age": 1, "weight": 1, "height": 1, "body": 1, "ethnicity": 1}).SetLimit(data.Limit).SetSkip(data.Skip).SetSort(bson.D{{Key: data.SortKey, Value: data.SortValue}})
-	filter := bson.M{"age": bson.M{"$gte": data.AgeMin, "$lte": data.AgeMax}, "height": bson.M{"$gte": data.HeightMin, "$lte": data.HeightMax}, "weight": bson.M{"$gte": data.WeightMin, "$lte": data.WeightMax}, "body": bson.M{"$in": data.Body}, "sex": bson.M{"$in": data.Sex}, "smokes": bson.M{"$in": data.Smokes}, "drinks": bson.M{"$in": data.Drinks}, "ethnicity": bson.M{"$in": data.Ethnicity}, "search": bson.M{"$in": data.Search}, "income": bson.M{"$in": data.Income}, "children": bson.M{"$in": data.Children}, "industry": bson.M{"$in": data.Industry}, "premium": bson.M{"$in": data.Premium}}
-	if data.Text != "" {
-		filter["$text"] = bson.M{"$search": data.Text}
-	}
+func GetUsers(data List, filter bson.M) []bson.M {
+	opts := options.Find().SetProjection(bson.M{
+		"username":   1,
+		"title":      1,
+		"age":        1,
+		"weight":     1,
+		"height":     1,
+		"body":       1,
+		"ethnicity":  1,
+		"public":     1,
+		"private":    1,
+		"avatar":     1,
+		"premium":    1,
+		"country_id": 1,
+		"city_id":    1,
+		"online":     1,
+		"is_about":   1,
+	}).
+		SetLimit(data.Limit).
+		SetSkip(data.Skip).
+		SetSort(bson.D{
+			{Key: "premium", Value: -1},
+			{Key: data.Sort, Value: -1},
+		})
+
 	cursor, _ := users.Find(ctx, filter, opts)
 	cursor.All(ctx, &list)
 
 	return list
 }
 
-// Get profile that has status 1
 func GetProfile(id int) (bson.M, error) {
 	var user bson.M
-	opts := options.FindOne().SetProjection(bson.M{"username": 1, "title": 1, "about": 1, "sex": 1, "age": 1, "body": 1, "height": 1, "weight": 1, "smokes": 1, "drinks": 1, "ethnicity": 1, "search": 1, "income": 1, "children": 1, "industry": 1, "premium": 1, "active": 1, "avatar": 1, "public": 1, "private": 1, "prefer": 1, "created_at": 1, "last_time": 1, "online": 1, "country_id": 1, "city_id": 1})
+	opts := options.FindOne().SetProjection(bson.M{
+		"username":   1,
+		"title":      1,
+		"about":      1,
+		"sex":        1,
+		"age":        1,
+		"body":       1,
+		"height":     1,
+		"weight":     1,
+		"smokes":     1,
+		"drinks":     1,
+		"ethnicity":  1,
+		"search":     1,
+		"income":     1,
+		"children":   1,
+		"industry":   1,
+		"premium":    1,
+		"active":     1,
+		"avatar":     1,
+		"public":     1,
+		"private":    1,
+		"prefer":     1,
+		"created_at": 1,
+		"last_time":  1,
+		"online":     1,
+		"country_id": 1,
+		"city_id":    1,
+	})
 
 	if err := users.FindOne(ctx, bson.M{"_id": id, "status": true}, opts).Decode(&user); err != nil {
 		return user, errors.New("0")
@@ -86,4 +136,80 @@ func GetTemplates(c gin.Context) bson.M {
 	templates.FindOne(ctx, bson.M{"_id": idInt}, opts).Decode(&text)
 
 	return text
+}
+
+func CountUsers(filter bson.M) int64 {
+	count, err := users.CountDocuments(ctx, filter)
+
+	if err != nil {
+		return 0
+	} else {
+		return count
+	}
+}
+
+// Filter for users search
+func PrepareFilter(data List) bson.M {
+	filter := bson.M{
+		"age":      bson.M{"$gte": data.AgeMin, "$lte": data.AgeMax},
+		"height":   bson.M{"$gte": data.HeightMin, "$lte": data.HeightMax},
+		"weight":   bson.M{"$gte": data.WeightMin, "$lte": data.WeightMax},
+		"children": bson.M{"$gte": data.ChildrenMin, "$lte": data.ChildrenMax},
+	}
+
+	if len(data.Body) > 0 {
+		filter["body"] = bson.M{"$in": data.Body}
+	}
+
+	if len(data.Sex) > 0 {
+		filter["sex"] = bson.M{"$in": data.Sex}
+	}
+
+	if len(data.Smokes) > 0 {
+		filter["smokes"] = bson.M{"$in": data.Smokes}
+	}
+
+	if len(data.Drinks) > 0 {
+		filter["drinks"] = bson.M{"$in": data.Drinks}
+	}
+
+	if len(data.Ethnicity) > 0 {
+		filter["ethnicity"] = bson.M{"$in": data.Ethnicity}
+	}
+
+	if len(data.Search) > 0 {
+		filter["search"] = bson.M{"$in": data.Search}
+	}
+
+	if len(data.Income) > 0 {
+		filter["income"] = bson.M{"$in": data.Income}
+	}
+
+	if len(data.Industry) > 0 {
+		filter["industry"] = bson.M{"$in": data.Industry}
+	}
+
+	if len(data.Premium) > 0 {
+		filter["premium"] = bson.M{"$in": data.Premium}
+	}
+
+	if len(data.Country) > 0 {
+		filter["country_id"] = bson.M{"$in": data.Country}
+	}
+
+	if len(data.City) > 0 {
+		filter["city_id"] = bson.M{"$in": data.City}
+	}
+
+	if data.IsAbout == true {
+		filter["is_about"] = true
+	}
+
+	if data.Text != "" {
+		filter["$text"] = bson.M{"$search": data.Text}
+	}
+
+	filter["status"] = true
+
+	return filter
 }

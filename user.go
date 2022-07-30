@@ -36,6 +36,7 @@ type user struct {
 	Children   int    `form:"children"`
 	Industry   int    `form:"industry"`
 	Online     bool   `form:"online"`
+	Premium    int    `json:"premium"`
 }
 
 func Change(data user, c gin.Context) error {
@@ -91,6 +92,7 @@ func Change(data user, c gin.Context) error {
 	cookUsername, _ := c.Cookie("username")
 	title := strings.TrimSpace(data.Title)
 	about := strings.TrimSpace(data.About)
+	var isAbout bool
 
 	if cookUsername != username {
 		if available := CheckUsernameAvailable(username); !available {
@@ -98,23 +100,30 @@ func Change(data user, c gin.Context) error {
 		}
 	}
 
+	if len(about) == 0 {
+		isAbout = false
+	} else {
+		isAbout = true
+	}
+
 	if _, err := users.UpdateOne(ctx, bson.M{"_id": idInt}, bson.D{
 		{Key: "$set", Value: bson.D{{Key: "username", Value: username}}},
 		{Key: "$set", Value: bson.D{{Key: "title", Value: title}}},
 		{Key: "$set", Value: bson.D{{Key: "about", Value: about}}},
+		{Key: "$set", Value: bson.D{{Key: "is_about", Value: isAbout}}},
 		{Key: "$set", Value: bson.D{{Key: "sex", Value: data.Sex}}},
 		{Key: "$set", Value: bson.D{{Key: "age", Value: data.Age}}},
+		{Key: "$set", Value: bson.D{{Key: "body", Value: data.Body}}},
 		{Key: "$set", Value: bson.D{{Key: "weight", Value: data.Weight}}},
 		{Key: "$set", Value: bson.D{{Key: "height", Value: data.Height}}},
-		{Key: "$set", Value: bson.D{{Key: "body", Value: data.Body}}},
 		{Key: "$set", Value: bson.D{{Key: "smokes", Value: data.Smokes}}},
 		{Key: "$set", Value: bson.D{{Key: "drinks", Value: data.Drinks}}},
+		{Key: "$set", Value: bson.D{{Key: "ethnicity", Value: data.Ethnicity}}},
 		{Key: "$set", Value: bson.D{{Key: "search", Value: data.Search}}},
 		{Key: "$set", Value: bson.D{{Key: "prefer", Value: data.Prefer}}},
 		{Key: "$set", Value: bson.D{{Key: "income", Value: data.Income}}},
 		{Key: "$set", Value: bson.D{{Key: "children", Value: data.Children}}},
 		{Key: "$set", Value: bson.D{{Key: "industry", Value: data.Industry}}},
-		{Key: "$set", Value: bson.D{{Key: "ethnicity", Value: data.Ethnicity}}},
 		{Key: "$set", Value: bson.D{{Key: "country_id", Value: data.Country_id}}},
 		{Key: "$set", Value: bson.D{{Key: "city_id", Value: data.City_id}}},
 	}); err != nil {
