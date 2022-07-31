@@ -12,7 +12,8 @@ import (
 type List struct {
 	Limit       int64  `json:"limit"`
 	Skip        int64  `json:"skip"`
-	Sort        string `json:"sort"`
+	SortField   string `json:"sortField"`
+	SortValue   int    `json:"sortValue"`
 	AgeMin      int    `json:"ageMin"`
 	AgeMax      int    `json:"ageMax"`
 	HeightMin   int    `json:"heightMin"`
@@ -63,7 +64,7 @@ func GetUsers(data List, filter bson.M) []bson.M {
 		SetSkip(data.Skip).
 		SetSort(bson.D{
 			{Key: "premium", Value: -1},
-			{Key: data.Sort, Value: -1},
+			{Key: data.SortField, Value: data.SortValue},
 		})
 
 	cursor, _ := users.Find(ctx, filter, opts)
