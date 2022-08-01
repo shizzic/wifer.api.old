@@ -65,6 +65,7 @@ func GetUsers(data List, filter bson.M) []bson.M {
 		SetSort(bson.D{
 			{Key: "premium", Value: -1},
 			{Key: data.SortField, Value: data.SortValue},
+			{Key: "_id", Value: 1},
 		})
 
 	cursor, _ := users.Find(ctx, filter, opts)
