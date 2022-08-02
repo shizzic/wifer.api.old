@@ -17,6 +17,7 @@ func UploadImage(dir string, c gin.Context) error {
 	file, _ := c.FormFile("file")
 
 	if file.Size < 20000001 {
+		isAvatar := 0
 		id, _ := c.Cookie("id")
 		path := "/var/www/html/" + id
 		os.MkdirAll(path+"/public", os.ModePerm)
@@ -24,19 +25,32 @@ func UploadImage(dir string, c gin.Context) error {
 		_, avatar := os.Stat(path + "/avatar.webp")
 		idInt, _ := strconv.Atoi(id)
 
-		if dir != "private" && avatar != nil {
-			c.SaveUploadedFile(file, path+"/avatar.webp")
-			ConvertResize(path + "/avatar.webp")
-			UpdateDataBaseImages(idInt, path)
+		if avatar == nil {
+			isAvatar = 1
+		}
+
+		private, _ := os.ReadDir(path + "/private")
+		public, _ := os.ReadDir(path + "/public")
+
+		all := len(public) + len(private) + isAvatar
+
+		if all < 20 {
+			if dir != "private" && avatar != nil {
+				c.SaveUploadedFile(file, path+"/avatar.webp")
+				ConvertResize(path + "/avatar.webp")
+				UpdateDataBaseImages(idInt, path)
+			} else {
+				files, _ := ioutil.ReadDir(path + "/" + dir)
+				root := path + "/" + dir + "/" + fmt.Sprint(len(files)+1) + ".webp"
+				c.SaveUploadedFile(file, root)
+				ConvertResize(root)
+				UpdateDataBaseImages(idInt, path)
+			}
 		} else {
-			files, _ := ioutil.ReadDir(path + "/" + dir)
-			root := path + "/" + dir + "/" + fmt.Sprint(len(files)+1) + ".webp"
-			c.SaveUploadedFile(file, root)
-			ConvertResize(root)
-			UpdateDataBaseImages(idInt, path)
+			return errors.New("max_image")
 		}
 	} else {
-		return errors.New("0")
+		return errors.New("max_size")
 	}
 
 	return nil

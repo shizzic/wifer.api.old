@@ -93,7 +93,6 @@ func GetProfile(id int) (bson.M, error) {
 		"children":   1,
 		"industry":   1,
 		"premium":    1,
-		"active":     1,
 		"avatar":     1,
 		"public":     1,
 		"private":    1,
@@ -105,7 +104,7 @@ func GetProfile(id int) (bson.M, error) {
 		"city_id":    1,
 	})
 
-	if err := users.FindOne(ctx, bson.M{"_id": id, "status": true}, opts).Decode(&user); err != nil {
+	if err := users.FindOne(ctx, bson.M{"_id": id, "status": true, "active": true}, opts).Decode(&user); err != nil {
 		return user, errors.New("0")
 	}
 
@@ -212,6 +211,7 @@ func PrepareFilter(data List) bson.M {
 	}
 
 	filter["status"] = true
+	filter["active"] = true
 
 	return filter
 }

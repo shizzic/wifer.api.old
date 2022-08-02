@@ -34,6 +34,8 @@ func isFacebook(id, token string) (string, error) {
 	return data["email"].(string), nil
 }
 
+// --------------------------------------------------------------------
+
 // Check if code from email valid for use
 func isCode(code string) bool {
 	if len(code) == 6 {

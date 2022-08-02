@@ -40,7 +40,7 @@ func main() {
 		}
 	})
 
-	r.PUT("/logout", func(c *gin.Context) {
+	r.PUT("/logout", Auth(), func(c *gin.Context) {
 		Logout(*c)
 	})
 
@@ -76,7 +76,6 @@ func main() {
 	r.PUT("/change", Auth(), func(c *gin.Context) {
 		var data user
 		c.BindJSON(&data)
-		// c.JSON(200, data)
 
 		if err := Change(data, *c); err != nil {
 			c.JSON(400, gin.H{"error": err.Error()})
@@ -103,29 +102,16 @@ func main() {
 		c.JSON(200, text)
 	})
 
+	r.PUT("/deactivate", Auth(), func(c *gin.Context) {
+		DeactivateAccount(*c)
+	})
+
 	// Delete all user's data forever
 	// r.DELETE("/deleteAccount", Auth(), func(c *gin.Context) {
 	// 	if err := DeleteAccount(c.PostForm("password"), *c); err != nil {
 	// 		c.String(400, err.Error())
 	// 	} else {
 	// 		c.String(200, "account deleted")
-	// 	}
-	// })
-
-	// // Delete user's data smootly
-	// r.PUT("/deactivateAccount", Auth(), func(c *gin.Context) {
-	// 	if err := DiactivateAccount(c.PostForm("password"), *c); err != nil {
-	// 		c.String(400, err.Error())
-	// 	} else {
-	// 		c.String(200, "account frozen")
-	// 	}
-	// })
-
-	// r.DELETE("/restoreAccount", Auth(), func(c *gin.Context) {
-	// 	if err := DeleteAccount(c.PostForm("password"), *c); err != nil {
-	// 		c.String(400, err.Error())
-	// 	} else {
-	// 		c.String(200, "account restored")
 	// 	}
 	// })
 

@@ -181,6 +181,20 @@ func Logout(c gin.Context) {
 	MakeCookies("", "", -1, c)
 }
 
+// Set active filed to false and handle user's content
+func DeactivateAccount(c gin.Context) {
+	id, _ := c.Cookie("id")
+	idInt, _ := strconv.Atoi(id)
+
+	users.UpdateOne(ctx, bson.M{"_id": idInt}, bson.D{
+		{Key: "$set", Value: bson.D{{Key: "active", Value: false}}},
+		{Key: "$set", Value: bson.D{{Key: "online", Value: false}}},
+		{Key: "$set", Value: bson.D{{Key: "last_time", Value: time.Now().Unix()}}},
+	})
+
+	MakeCookies("", "", -1, c)
+}
+
 // Delete account forever
 // func DeleteAccount(password string, c gin.Context) error {
 // 	id, _ := c.Cookie("id")

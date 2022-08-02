@@ -26,10 +26,18 @@ func Signin(email string, c gin.Context, api bool) (int, error) {
 	code := MakeCode()
 
 	var user bson.M
-	opts := options.FindOne().SetProjection(bson.M{"_id": 1, "username": 1, "email": 1, "active": 1})
+	opts := options.FindOne().SetProjection(bson.M{"_id": 1, "username": 1, "email": 1, "status": 1, "active": 1})
 	notFound := users.FindOne(ctx, bson.M{"email": email}, opts).Decode(&user)
 
 	if notFound == nil {
+		if !user["status"].(bool) {
+			return 0, errors.New("4")
+		}
+
+		if !user["active"].(bool) {
+			users.UpdateOne(ctx, bson.M{"_id": user["_id"].(int32)}, bson.D{{Key: "$set", Value: bson.D{{Key: "active", Value: true}}}})
+		}
+
 		if api {
 			MakeCookies(strconv.Itoa(int(user["_id"].(int32))), user["username"].(string), 86400*120, c)
 			return int(user["_id"].(int32)), nil
@@ -80,7 +88,7 @@ func Signin(email string, c gin.Context, api bool) (int, error) {
 			{Key: "city_id", Value: 0},
 			{Key: "premium", Value: 0},
 			{Key: "status", Value: api},
-			{Key: "active", Value: true},
+			{Key: "active", Value: api},
 			{Key: "created_at", Value: date},
 			{Key: "last_time", Value: date},
 			{Key: "online", Value: false},

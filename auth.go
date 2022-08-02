@@ -101,7 +101,10 @@ func CheckCode(id int, code string, c gin.Context) error {
 		return errors.New("2")
 	}
 
-	users.UpdateOne(ctx, bson.M{"_id": id}, bson.D{{Key: "$set", Value: bson.D{{Key: "status", Value: true}}}})
+	users.UpdateOne(ctx, bson.M{"_id": id}, bson.D{{Key: "$set", Value: bson.D{
+		{Key: "status", Value: true},
+		{Key: "active", Value: true},
+	}}})
 
 	MakeCookies(strconv.Itoa(id), user["username"].(string), 86400*120, c)
 
