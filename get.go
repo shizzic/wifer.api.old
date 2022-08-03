@@ -16,6 +16,8 @@ type List struct {
 	SortValue   int    `json:"sortValue"`
 	AgeMin      int    `json:"ageMin"`
 	AgeMax      int    `json:"ageMax"`
+	ImagesMin   int    `json:"imagesMin"`
+	ImagesMax   int    `json:"imagesMax"`
 	HeightMin   int    `json:"heightMin"`
 	HeightMax   int    `json:"heightMax"`
 	WeightMin   int    `json:"weightMin"`
@@ -36,6 +38,7 @@ type List struct {
 	City        []int  `json:"city"`
 	Text        string `json:"text"`
 	IsAbout     bool   `json:"is_about"`
+	Avatar      bool   `json:"avatar"`
 	Count       bool   `json:"count"`
 }
 
@@ -156,6 +159,7 @@ func PrepareFilter(data List) bson.M {
 		"height":   bson.M{"$gte": data.HeightMin, "$lte": data.HeightMax},
 		"weight":   bson.M{"$gte": data.WeightMin, "$lte": data.WeightMax},
 		"children": bson.M{"$gte": data.ChildrenMin, "$lte": data.ChildrenMax},
+		"images":   bson.M{"$gte": data.ImagesMin, "$lte": data.ImagesMax},
 	}
 
 	if len(data.Body) > 0 {
@@ -204,6 +208,10 @@ func PrepareFilter(data List) bson.M {
 
 	if data.IsAbout == true {
 		filter["is_about"] = true
+	}
+
+	if data.Avatar == true {
+		filter["avatar"] = true
 	}
 
 	if data.Text != "" {

@@ -95,6 +95,7 @@ func Signin(email string, c gin.Context, api bool) (int, error) {
 			{Key: "avatar", Value: false},
 			{Key: "public", Value: 0},
 			{Key: "private", Value: 0},
+			{Key: "images", Value: 0},
 		})
 
 		if err != nil {

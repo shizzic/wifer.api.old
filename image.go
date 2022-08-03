@@ -148,20 +148,25 @@ func ReplaceAvatar(dir, num string, c gin.Context) {
 
 // Update info about images in database
 func UpdateDataBaseImages(id int, path string) {
-	ava := true
+	avatar := true
+	ava := 1
 	_, err := os.Stat(path + "/avatar.webp")
 
 	if err != nil {
-		ava = false
+		avatar = false
+		ava = 0
 	}
 
 	public, _ := os.ReadDir(path + "/public")
 	private, _ := os.ReadDir(path + "/private")
+	pubLen := len(public)
+	priLen := len(private)
 
 	users.UpdateOne(ctx, bson.M{"_id": id}, bson.D{
-		{Key: "$set", Value: bson.D{{Key: "avatar", Value: ava}}},
-		{Key: "$set", Value: bson.D{{Key: "public", Value: len(public)}}},
-		{Key: "$set", Value: bson.D{{Key: "private", Value: len(private)}}},
+		{Key: "$set", Value: bson.D{{Key: "avatar", Value: avatar}}},
+		{Key: "$set", Value: bson.D{{Key: "public", Value: pubLen}}},
+		{Key: "$set", Value: bson.D{{Key: "private", Value: priLen}}},
+		{Key: "$set", Value: bson.D{{Key: "images", Value: pubLen + priLen + ava}}},
 	})
 }
 
