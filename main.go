@@ -106,14 +106,6 @@ func main() {
 		DeactivateAccount(*c)
 	})
 
-	// r.DELETE("/deleteAccount", Auth(), func(c *gin.Context) {
-	// 	if err := DeleteAccount(c.PostForm("password"), *c); err != nil {
-	// 		c.String(400, err.Error())
-	// 	} else {
-	// 		c.String(200, "account deleted")
-	// 	}
-	// })
-
 	r.POST("/getUsers", func(c *gin.Context) {
 		var data List
 		c.BindJSON(&data)
@@ -127,6 +119,25 @@ func main() {
 		} else {
 			c.JSON(200, gin.H{"users": GetUsers(data, filter)})
 		}
+	})
+
+	r.GET("/target", Auth(), func(c *gin.Context) {
+		var data target
+		c.Bind(&data)
+		result := GetTarget(data.Target, *c)
+		c.JSON(200, result)
+	})
+
+	r.POST("/like", Auth(), func(c *gin.Context) {
+		var data target
+		c.Bind(&data)
+		AddLike(data.Target, *c)
+	})
+
+	r.DELETE("/like", Auth(), func(c *gin.Context) {
+		var data target
+		c.Bind(&data)
+		DeleteLike(data.Target, *c)
 	})
 
 	r.POST("/upload", Auth(), func(c *gin.Context) {

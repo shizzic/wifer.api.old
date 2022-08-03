@@ -107,7 +107,7 @@ func GetProfile(id int) (bson.M, error) {
 		"city_id":    1,
 	})
 
-	if err := users.FindOne(ctx, bson.M{"_id": id, "status": true, "active": true}, opts).Decode(&user); err != nil {
+	if err := users.FindOne(ctx, bson.M{"_id": id, "status": true}, opts).Decode(&user); err != nil {
 		return user, errors.New("0")
 	}
 
