@@ -106,7 +106,6 @@ func main() {
 		DeactivateAccount(*c)
 	})
 
-	// Delete all user's data forever
 	// r.DELETE("/deleteAccount", Auth(), func(c *gin.Context) {
 	// 	if err := DeleteAccount(c.PostForm("password"), *c); err != nil {
 	// 		c.String(400, err.Error())

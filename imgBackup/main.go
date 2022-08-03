@@ -4,26 +4,21 @@ import (
 	"context"
 	"io/ioutil"
 	"os"
-	"os/exec"
 
 	"github.com/kothar/go-backblaze"
 	"github.com/mholt/archiver/v4"
 )
 
 func main() {
-	err := exec.Command("mongodump", "mongodb://shizzic:WebDev77@wifer-test.ru:27017/wifer?authSource=admin&readPreference=primary&appname=MongoDB%20Compass&directConnection=true&ssl=false", "-d", "wifer", "-o", "/var/www/default/site").Run()
-
-	if err == nil {
-		ZipBackUp()
-	}
+	ZipImages()
 }
 
 // Make comprasion of database to gzip file
-func ZipBackUp() {
+func ZipImages() {
 	files, _ := archiver.FilesFromDisk(nil, map[string]string{
-		"/var/www/default/site/wifer": "DB",
+		"/var/www/html": "Images",
 	})
-	out, _ := os.Create("/var/www/default/site/db.tar.gz")
+	out, _ := os.Create("/var/www/default/site/images.tar.gz")
 	defer out.Close()
 
 	format := archiver.CompressedArchive{
@@ -32,7 +27,6 @@ func ZipBackUp() {
 	}
 	err := format.Archive(context.Background(), out, files)
 	if err == nil {
-		os.RemoveAll("/var/www/default/site/wifer")
 		ToBackblaze()
 	}
 }
@@ -50,20 +44,20 @@ func ToBackblaze() {
 	})
 	bucket, _ := b2.Bucket("my-wifer")
 
-	_, err := os.Stat("/var/www/default/site/DBID.txt")
+	_, err := os.Stat("/var/www/default/site/ImagesID.txt")
 	if err == nil {
-		content, _ := ioutil.ReadFile("/var/www/default/site/DBID.txt")
+		content, _ := ioutil.ReadFile("/var/www/default/site/ImagesID.txt")
 		fileId := string(content)
-		bucket.DeleteFileVersion("db.tar.gz", fileId)
+		bucket.DeleteFileVersion("images.tar.gz", fileId)
 	}
 
-	reader, _ := os.Open("/var/www/default/site/db.tar.gz")
+	reader, _ := os.Open("/var/www/default/site/images.tar.gz")
 	metadata := make(map[string]string)
-	res, _ := bucket.UploadFile("db.tar.gz", metadata, reader)
+	res, _ := bucket.UploadFile("images.tar.gz", metadata, reader)
 
-	os.Remove("/var/www/default/site/DBID.txt")
-	file, _ := os.Create("/var/www/default/site/DBID.txt")
+	os.Remove("/var/www/default/site/ImagesID.txt")
+	file, _ := os.Create("/var/www/default/site/ImagesID.txt")
 	file.WriteString(res.ID)
 
-	os.RemoveAll("/var/www/default/site/db.tar.gz")
+	os.RemoveAll("/var/www/default/site/images.tar.gz")
 }
