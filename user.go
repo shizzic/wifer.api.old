@@ -194,26 +194,3 @@ func DeactivateAccount(c gin.Context) {
 
 	MakeCookies("", "", -1, c)
 }
-
-// Delete account forever
-// func DeleteAccount(password string, c gin.Context) error {
-// 	id, _ := c.Cookie("id")
-// 	username, _ := c.Cookie("username")
-// 	var user bson.M
-// 	opts := options.FindOne().SetProjection(bson.M{"password_hash": 1})
-
-// 	if err := users.FindOne(ctx, bson.M{"username": username}, opts).Decode(&user); err != nil {
-// 		return errors.New("account not deleted")
-// 	}
-
-// 	if r, err := users.DeleteOne(ctx, bson.M{"_id": id, "username": username}); err != nil || r.DeletedCount == 0 {
-// 		return errors.New("account not deleted")
-// 	}
-
-// 	// delete cookie
-// 	c.SetCookie("token", "", -1, "/", "wifer-test.ru", true, true)
-// 	c.SetCookie("username", "", -1, "/", "wifer-test.ru", true, true)
-// 	c.SetCookie("id", "", -1, "/", "wifer-test.ru", true, true)
-
-// 	return nil
-// }

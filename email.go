@@ -2,9 +2,7 @@ package main
 
 import (
 	"crypto/tls"
-	"errors"
 
-	"go.mongodb.org/mongo-driver/bson"
 	"gopkg.in/gomail.v2"
 )
 
@@ -19,19 +17,6 @@ func SendCode(to, code, id string) error {
 
 	if err := d.DialAndSend(m); err != nil {
 		return err
-	}
-
-	return nil
-}
-
-// Delete all user's data, if it triggered by link from email
-func EnsureDelete(id, token string) error {
-	if r, err := ensure.DeleteOne(ctx, bson.M{"_id": id, "token": token}); err != nil || r.DeletedCount == 0 {
-		return errors.New("ensure hasn't deleted")
-	}
-
-	if r, err := users.DeleteOne(ctx, bson.M{"_id": id}); err != nil || r.DeletedCount == 0 {
-		return errors.New("user hasn't deleted")
 	}
 
 	return nil
