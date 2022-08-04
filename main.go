@@ -48,10 +48,11 @@ func main() {
 		var data user
 		c.Bind(&data)
 
+		target := GetTarget(data.ID, *c)
 		if user, err := GetProfile(data.ID); err != nil {
 			c.JSON(404, gin.H{"error": err.Error()})
 		} else {
-			c.JSON(200, user)
+			c.JSON(200, gin.H{"user": user, "target": target})
 		}
 	})
 
@@ -121,13 +122,6 @@ func main() {
 		}
 	})
 
-	r.GET("/target", Auth(), func(c *gin.Context) {
-		var data target
-		c.Bind(&data)
-		result := GetTarget(data.Target, *c)
-		c.JSON(200, result)
-	})
-
 	r.POST("/like", Auth(), func(c *gin.Context) {
 		var data target
 		c.Bind(&data)
@@ -138,6 +132,18 @@ func main() {
 		var data target
 		c.Bind(&data)
 		DeleteLike(data.Target, *c)
+	})
+
+	r.POST("/private", Auth(), func(c *gin.Context) {
+		var data target
+		c.Bind(&data)
+		AddPrivate(data.Target, *c)
+	})
+
+	r.DELETE("/private", Auth(), func(c *gin.Context) {
+		var data target
+		c.Bind(&data)
+		DeletePrivate(data.Target, *c)
 	})
 
 	r.POST("/upload", Auth(), func(c *gin.Context) {
