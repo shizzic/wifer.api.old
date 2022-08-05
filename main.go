@@ -146,6 +146,13 @@ func main() {
 		DeletePrivate(data.Target, *c)
 	})
 
+	r.POST("/note", Auth(), func(c *gin.Context) {
+		var data target
+		c.Bind(&data)
+		text := strings.TrimSpace(data.Text)
+		AddNote(data.Target, text, *c)
+	})
+
 	r.POST("/upload", Auth(), func(c *gin.Context) {
 		if err := UploadImage(c.PostForm("dir"), *c); err != nil {
 			c.JSON(500, gin.H{"error": err.Error()})

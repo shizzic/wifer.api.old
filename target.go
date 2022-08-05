@@ -10,7 +10,8 @@ import (
 )
 
 type target struct {
-	Target int `form:"target"`
+	Target int    `form:"target"`
+	Text   string `form:"text"`
 }
 
 type Target struct {
@@ -138,5 +139,15 @@ func DeletePrivate(target int, c gin.Context) {
 
 	if idInt != target && target != 0 {
 		private.DeleteOne(ctx, bson.M{"user": idInt, "target": target})
+	}
+}
+
+// Adding new note for favorited user
+func AddNote(target int, text string, c gin.Context) {
+	id, _ := c.Cookie("id")
+	idInt, _ := strconv.Atoi(id)
+
+	if idInt != target && target != 0 {
+		likes.UpdateOne(ctx, bson.M{"user": idInt, "target": target}, bson.D{{Key: "$set", Value: bson.D{{Key: "text", Value: text}}}})
 	}
 }
