@@ -11,6 +11,10 @@ import (
 
 type target struct {
 	Target int    `form:"target"`
+	Skip   int64  `form:"skip"`
+	Limit  int64  `form:"limit"`
+	Which  int    `form:"which"`
+	Mode   bool   `form:"mode"`
 	Text   string `form:"text"`
 }
 
@@ -18,6 +22,8 @@ type Target struct {
 	Like    bson.M
 	Private []bson.M
 }
+
+// _________________________GET_______________________________
 
 // Compilation of all functions for target
 func GetTarget(target int, c gin.Context) Target {
@@ -73,6 +79,34 @@ func GetPrivate(id, target int, c gin.Context) (bool, []bson.M) {
 	return true, data
 }
 
+// Get quantity of unseen notifications by user
+func GetNotifications(c gin.Context) map[string]int64 {
+	id, _ := c.Cookie("id")
+	idInt, _ := strconv.Atoi(id)
+	data := make(map[string]int64)
+
+	iLikes, err := likes.CountDocuments(ctx, bson.M{"target": idInt, "viewed": false})
+	if err == nil {
+		data["likes"] = iLikes
+	}
+
+	iViews, err := views.CountDocuments(ctx, bson.M{"target": idInt, "viewed": false})
+	if err == nil {
+		data["views"] = iViews
+	}
+
+	iPrivates, err := private.CountDocuments(ctx, bson.M{"target": idInt, "viewed": false})
+	if err == nil {
+		data["privates"] = iPrivates
+	}
+
+	return data
+}
+
+// ___________________________________________________________
+
+// _________________________ADD_______________________________
+
 // Add view of another user's profile
 func AddView(id, target int, c gin.Context) {
 	var view bson.M
@@ -106,16 +140,6 @@ func AddLike(target int, c gin.Context) {
 	}
 }
 
-// User deletes his like
-func DeleteLike(target int, c gin.Context) {
-	id, _ := c.Cookie("id")
-	idInt, _ := strconv.Atoi(id)
-
-	if idInt != target && target != 0 {
-		likes.DeleteOne(ctx, bson.M{"user": idInt, "target": target})
-	}
-}
-
 // User likes another user
 func AddPrivate(target int, c gin.Context) {
 	id, _ := c.Cookie("id")
@@ -132,16 +156,6 @@ func AddPrivate(target int, c gin.Context) {
 	}
 }
 
-// User deletes his like
-func DeletePrivate(target int, c gin.Context) {
-	id, _ := c.Cookie("id")
-	idInt, _ := strconv.Atoi(id)
-
-	if idInt != target && target != 0 {
-		private.DeleteOne(ctx, bson.M{"user": idInt, "target": target})
-	}
-}
-
 // Adding new note for favorited user
 func AddNote(target int, text string, c gin.Context) {
 	id, _ := c.Cookie("id")
@@ -152,26 +166,106 @@ func AddNote(target int, text string, c gin.Context) {
 	}
 }
 
-// Get quantity of unseen notifications by user
-func GetNotifications(c gin.Context) map[string]int64 {
+// ___________________________________________________________
+
+// _________________________DELETE_______________________________
+
+// User deletes his like
+func DeleteLike(target int, c gin.Context) {
 	id, _ := c.Cookie("id")
 	idInt, _ := strconv.Atoi(id)
-	data := make(map[string]int64)
 
-	iLikes, err := likes.CountDocuments(ctx, bson.M{"target": idInt, "viewed": false})
-	if err == nil {
-		data["likes"] = iLikes
+	if idInt != target && target != 0 {
+		likes.DeleteOne(ctx, bson.M{"user": idInt, "target": target})
+	}
+}
+
+// User deletes his like
+func DeletePrivate(target int, c gin.Context) {
+	id, _ := c.Cookie("id")
+	idInt, _ := strconv.Atoi(id)
+
+	if idInt != target && target != 0 {
+		private.DeleteOne(ctx, bson.M{"user": idInt, "target": target})
+	}
+}
+
+// ___________________________________________________________
+
+func GetTargets(data target, c gin.Context) []bson.M {
+	res := []bson.M{}
+	id, _ := c.Cookie("id")
+	idInt, _ := strconv.Atoi(id)
+
+	if data.Which == 0 {
+		res = GetViews(idInt, data)
 	}
 
-	iViews, err := views.CountDocuments(ctx, bson.M{"target": idInt, "viewed": false})
-	if err == nil {
-		data["views"] = iViews
+	return res
+}
+
+func GetViews(id int, data target) []bson.M {
+	var list []bson.M
+	var ids []int32
+	targets := []bson.M{}
+	projection := bson.M{"_id": 0}
+	filter := bson.M{}
+	var key string
+
+	if data.Mode {
+		projection["target"] = 1
+		filter["user"] = id
+		key = "target"
+	} else {
+		projection["user"] = 1
+		filter["target"] = id
+		key = "user"
 	}
 
-	iPrivates, err := private.CountDocuments(ctx, bson.M{"target": idInt, "viewed": false})
-	if err == nil {
-		data["privates"] = iPrivates
+	opts1 := options.Find().SetProjection(projection).SetSort(bson.D{{Key: "created_at", Value: -1}})
+	cursor, _ := views.Find(ctx, filter, opts1)
+	cursor.All(ctx, &targets)
+	ids = RetrieveTargets(targets, key)
+
+	if data.Mode {
+		views.UpdateOne(ctx, bson.M{"user": id, "target": bson.M{"$in": ids}}, bson.D{{Key: "$set", Value: bson.D{{Key: "viewed", Value: true}}}})
+	} else {
+		views.UpdateOne(ctx, bson.M{"user": bson.M{"$in": ids}, "target": id}, bson.D{{Key: "$set", Value: bson.D{{Key: "viewed", Value: true}}}})
 	}
 
-	return data
+	opts2 := options.Find().SetProjection(bson.M{
+		"username":   1,
+		"title":      1,
+		"age":        1,
+		"weight":     1,
+		"height":     1,
+		"body":       1,
+		"ethnicity":  1,
+		"public":     1,
+		"private":    1,
+		"avatar":     1,
+		"premium":    1,
+		"country_id": 1,
+		"city_id":    1,
+		"online":     1,
+		"is_about":   1,
+	}).
+		SetSort(bson.D{
+			{Key: "premium", Value: -1},
+			{Key: "_id", Value: 1},
+		})
+
+	cur, _ := users.Find(ctx, bson.M{"_id": bson.M{"$in": ids}}, opts2)
+	cur.All(ctx, &list)
+
+	return list
+}
+
+// Get clean array of ints
+func RetrieveTargets(data []bson.M, key string) []int32 {
+	var res []int32
+	for _, value := range data {
+		res = append(res, value[key].(int32))
+	}
+	return res
 }

@@ -42,10 +42,10 @@ type List struct {
 	Count       bool   `json:"count"`
 }
 
-var list []bson.M
-
 // Fewer 40ms :D
 func GetUsers(data List, filter bson.M) []bson.M {
+	var list []bson.M
+
 	opts := options.Find().SetProjection(bson.M{
 		"username":   1,
 		"title":      1,
