@@ -151,3 +151,27 @@ func AddNote(target int, text string, c gin.Context) {
 		likes.UpdateOne(ctx, bson.M{"user": idInt, "target": target}, bson.D{{Key: "$set", Value: bson.D{{Key: "text", Value: text}}}})
 	}
 }
+
+// Get quantity of unseen notifications by user
+func GetNotifications(c gin.Context) map[string]int64 {
+	id, _ := c.Cookie("id")
+	idInt, _ := strconv.Atoi(id)
+	data := make(map[string]int64)
+
+	iLikes, err := likes.CountDocuments(ctx, bson.M{"target": idInt, "viewed": false})
+	if err == nil {
+		data["likes"] = iLikes
+	}
+
+	iViews, err := views.CountDocuments(ctx, bson.M{"target": idInt, "viewed": false})
+	if err == nil {
+		data["views"] = iViews
+	}
+
+	iPrivates, err := private.CountDocuments(ctx, bson.M{"target": idInt, "viewed": false})
+	if err == nil {
+		data["privates"] = iPrivates
+	}
+
+	return data
+}
