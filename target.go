@@ -11,10 +11,11 @@ import (
 
 type target struct {
 	Target int    `form:"target"`
+	Which  int    `form:"which"`
 	Skip   int64  `form:"skip"`
 	Limit  int64  `form:"limit"`
-	Which  int    `form:"which"`
 	Mode   bool   `form:"mode"`
+	Count  bool   `form:"count"`
 	Text   string `form:"text"`
 }
 
@@ -192,25 +193,37 @@ func DeletePrivate(target int, c gin.Context) {
 
 // ___________________________________________________________
 
-func GetTargets(data target, c gin.Context) []bson.M {
-	res := []bson.M{}
+func GetTargets(data target, c gin.Context) (int, map[string][]bson.M) {
+	res := make(map[string][]bson.M)
+	q := -1
 	id, _ := c.Cookie("id")
 	idInt, _ := strconv.Atoi(id)
 
 	if data.Which == 0 {
-		res = GetViews(idInt, data)
+		q, res = GetViews(idInt, data)
 	}
 
-	return res
+	if data.Which == 1 {
+		q, res = GetLikes(idInt, data)
+	}
+
+	if data.Which == 2 {
+		q, res = GetPrivates(idInt, data)
+	}
+
+	return q, res
 }
 
-func GetViews(id int, data target) []bson.M {
-	var list []bson.M
-	var ids []int32
-	targets := []bson.M{}
-	projection := bson.M{"_id": 0}
-	filter := bson.M{}
+func GetViews(id int, data target) (int, map[string][]bson.M) {
+	res := make(map[string][]bson.M)
+	q := -1
+	list := []bson.M{}
+	ids := []int32{}
 	var key string
+
+	targets := []bson.M{}
+	projection := bson.M{"_id": 0, "created_at": 1, "viewed": 1}
+	filter := bson.M{}
 
 	if data.Mode {
 		projection["target"] = 1
@@ -222,7 +235,16 @@ func GetViews(id int, data target) []bson.M {
 		key = "user"
 	}
 
-	opts1 := options.Find().SetProjection(projection).SetSort(bson.D{{Key: "created_at", Value: -1}})
+	if data.Count {
+		count, err := views.CountDocuments(ctx, filter)
+		if err != nil {
+			q = 0
+		} else {
+			q = int(count)
+		}
+	}
+
+	opts1 := options.Find().SetProjection(projection).SetSort(bson.D{{Key: "created_at", Value: -1}}).SetLimit(data.Limit).SetSkip(data.Skip)
 	cursor, _ := views.Find(ctx, filter, opts1)
 	cursor.All(ctx, &targets)
 	ids = RetrieveTargets(targets, key)
@@ -233,37 +255,134 @@ func GetViews(id int, data target) []bson.M {
 		views.UpdateOne(ctx, bson.M{"user": bson.M{"$in": ids}, "target": id}, bson.D{{Key: "$set", Value: bson.D{{Key: "viewed", Value: true}}}})
 	}
 
-	opts2 := options.Find().SetProjection(bson.M{
-		"username":   1,
-		"title":      1,
-		"age":        1,
-		"weight":     1,
-		"height":     1,
-		"body":       1,
-		"ethnicity":  1,
-		"public":     1,
-		"private":    1,
-		"avatar":     1,
-		"premium":    1,
-		"country_id": 1,
-		"city_id":    1,
-		"online":     1,
-		"is_about":   1,
-	}).
+	opts2 := options.Find().SetProjection(bson.M{"username": 1, "title": 1, "age": 1, "weight": 1, "height": 1, "body": 1, "ethnicity": 1, "public": 1, "private": 1, "avatar": 1, "premium": 1, "country_id": 1, "city_id": 1, "online": 1, "is_about": 1}).
 		SetSort(bson.D{
 			{Key: "premium", Value: -1},
 			{Key: "_id", Value: 1},
 		})
 
-	cur, _ := users.Find(ctx, bson.M{"_id": bson.M{"$in": ids}}, opts2)
+	cur, _ := users.Find(ctx, bson.M{"_id": bson.M{"$in": ids}, "status": true}, opts2)
 	cur.All(ctx, &list)
+	res["users"] = list
+	res["targets"] = targets
 
-	return list
+	return q, res
+}
+
+func GetLikes(id int, data target) (int, map[string][]bson.M) {
+	res := make(map[string][]bson.M)
+	q := -1
+	list := []bson.M{}
+	ids := []int32{}
+	var key string
+
+	targets := []bson.M{}
+	projection := bson.M{"_id": 0, "created_at": 1, "viewed": 1}
+	filter := bson.M{}
+
+	if data.Mode {
+		projection["target"] = 1
+		projection["text"] = 1
+		filter["user"] = id
+		key = "target"
+	} else {
+		projection["user"] = 1
+		filter["target"] = id
+		key = "user"
+	}
+
+	if data.Count {
+		count, err := likes.CountDocuments(ctx, filter)
+		if err != nil {
+			q = 0
+		} else {
+			q = int(count)
+		}
+	}
+
+	opts1 := options.Find().SetProjection(projection).SetSort(bson.D{{Key: "created_at", Value: -1}}).SetLimit(data.Limit).SetSkip(data.Skip)
+	cursor, _ := likes.Find(ctx, filter, opts1)
+	cursor.All(ctx, &targets)
+	ids = RetrieveTargets(targets, key)
+
+	if data.Mode {
+		likes.UpdateOne(ctx, bson.M{"user": id, "target": bson.M{"$in": ids}}, bson.D{{Key: "$set", Value: bson.D{{Key: "viewed", Value: true}}}})
+	} else {
+		likes.UpdateOne(ctx, bson.M{"user": bson.M{"$in": ids}, "target": id}, bson.D{{Key: "$set", Value: bson.D{{Key: "viewed", Value: true}}}})
+	}
+
+	opts2 := options.Find().SetProjection(bson.M{"username": 1, "title": 1, "age": 1, "weight": 1, "height": 1, "body": 1, "ethnicity": 1, "public": 1, "private": 1, "avatar": 1, "premium": 1, "country_id": 1, "city_id": 1, "online": 1, "is_about": 1}).
+		SetSort(bson.D{
+			{Key: "premium", Value: -1},
+			{Key: "_id", Value: 1},
+		})
+
+	cur, _ := users.Find(ctx, bson.M{"_id": bson.M{"$in": ids}, "status": true}, opts2)
+	cur.All(ctx, &list)
+	res["users"] = list
+	res["targets"] = targets
+
+	return q, res
+}
+
+func GetPrivates(id int, data target) (int, map[string][]bson.M) {
+	res := make(map[string][]bson.M)
+	q := -1
+	list := []bson.M{}
+	ids := []int32{}
+	var key string
+
+	targets := []bson.M{}
+	projection := bson.M{"_id": 0, "created_at": 1, "viewed": 1}
+	filter := bson.M{}
+
+	if data.Mode {
+		projection["target"] = 1
+		filter["user"] = id
+		key = "target"
+	} else {
+		projection["user"] = 1
+		filter["target"] = id
+		key = "user"
+	}
+
+	if data.Count {
+		count, err := private.CountDocuments(ctx, filter)
+		if err != nil {
+			q = 0
+		} else {
+			q = int(count)
+		}
+	}
+
+	opts1 := options.Find().SetProjection(projection).SetSort(bson.D{{Key: "created_at", Value: -1}}).SetLimit(data.Limit).SetSkip(data.Skip)
+	cursor, _ := private.Find(ctx, filter, opts1)
+	cursor.All(ctx, &targets)
+	ids = RetrieveTargets(targets, key)
+
+	if data.Mode {
+		private.UpdateOne(ctx, bson.M{"user": id, "target": bson.M{"$in": ids}}, bson.D{{Key: "$set", Value: bson.D{{Key: "viewed", Value: true}}}})
+	} else {
+		private.UpdateOne(ctx, bson.M{"user": bson.M{"$in": ids}, "target": id}, bson.D{{Key: "$set", Value: bson.D{{Key: "viewed", Value: true}}}})
+	}
+
+	opts2 := options.Find().SetProjection(bson.M{"username": 1, "title": 1, "age": 1, "weight": 1, "height": 1, "body": 1, "ethnicity": 1, "public": 1, "private": 1, "avatar": 1, "premium": 1, "country_id": 1, "city_id": 1, "online": 1, "is_about": 1}).
+		SetSort(bson.D{
+			{Key: "premium", Value: -1},
+			{Key: "_id", Value: 1},
+		})
+
+	cur, _ := users.Find(ctx, bson.M{"_id": bson.M{"$in": ids}, "status": true}, opts2)
+	cur.All(ctx, &list)
+	res["users"] = list
+	res["targets"] = targets
+
+	return q, res
 }
 
 // Get clean array of ints
 func RetrieveTargets(data []bson.M, key string) []int32 {
-	var res []int32
+	res := []int32{}
 	for _, value := range data {
 		res = append(res, value[key].(int32))
 	}

@@ -160,9 +160,12 @@ func main() {
 
 	r.POST("/targets", Auth(), func(c *gin.Context) {
 		var data target
-		c.Bind(&data)
-		res := GetTargets(data, *c)
-		c.JSON(200, res)
+		c.BindJSON(&data)
+		count, res := GetTargets(data, *c)
+		c.JSON(200, gin.H{
+			"data":  res,
+			"count": count,
+		})
 	})
 
 	r.POST("/upload", Auth(), func(c *gin.Context) {

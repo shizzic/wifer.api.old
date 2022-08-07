@@ -63,13 +63,13 @@ func GetUsers(data List, filter bson.M) []bson.M {
 		"online":     1,
 		"is_about":   1,
 	}).
-		SetLimit(data.Limit).
-		SetSkip(data.Skip).
 		SetSort(bson.D{
 			{Key: "premium", Value: -1},
 			{Key: data.SortField, Value: data.SortValue},
 			{Key: "_id", Value: 1},
-		})
+		}).
+		SetLimit(data.Limit).
+		SetSkip(data.Skip)
 
 	cursor, _ := users.Find(ctx, filter, opts)
 	cursor.All(ctx, &list)
