@@ -2,7 +2,6 @@ package main
 
 import (
 	"errors"
-	h "net/http"
 	"strconv"
 	"strings"
 	"time"
@@ -92,7 +91,7 @@ func Change(data user, c gin.Context) error {
 	cookUsername, _ := c.Cookie("username")
 	title := strings.TrimSpace(data.Title)
 	about := strings.TrimSpace(data.About)
-	var isAbout bool
+	isAbout := true
 
 	if cookUsername != username {
 		if available := CheckUsernameAvailable(username); !available {
@@ -102,8 +101,6 @@ func Change(data user, c gin.Context) error {
 
 	if len(about) == 0 {
 		isAbout = false
-	} else {
-		isAbout = true
 	}
 
 	if _, err := users.UpdateOne(ctx, bson.M{"_id": idInt}, bson.D{
@@ -130,10 +127,7 @@ func Change(data user, c gin.Context) error {
 		return errors.New("2")
 	}
 
-	c.SetSameSite(h.SameSiteNoneMode)
-	c.SetCookie("username", username, 86400*120, "/", "*."+domainBack, true, true)
-	c.SetCookie("token", EncryptToken(username), 86400*120, "/", "*."+domainBack, true, true)
-
+	MakeCookies(id, username, 86400*120, c)
 	return nil
 }
 
@@ -149,7 +143,7 @@ func ChangeOnline(value bool, c gin.Context) {
 }
 
 func CheckUsernameAvailable(username string) bool {
-	var data bson.M
+	data := bson.M{}
 	opts := options.FindOne().SetProjection(bson.M{"username": 1})
 	if err := users.FindOne(ctx, bson.M{"username": username}, opts).Decode(&data); err == nil {
 		return false

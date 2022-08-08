@@ -44,7 +44,7 @@ type List struct {
 
 // Fewer 40ms :D
 func GetUsers(data List, filter bson.M) []bson.M {
-	var list []bson.M
+	list := []bson.M{}
 
 	opts := options.Find().SetProjection(bson.M{
 		"username":   1,
@@ -78,7 +78,7 @@ func GetUsers(data List, filter bson.M) []bson.M {
 }
 
 func GetProfile(id int) (bson.M, error) {
-	var user bson.M
+	user := bson.M{}
 	opts := options.FindOne().SetProjection(bson.M{
 		"username":   1,
 		"title":      1,
@@ -115,7 +115,7 @@ func GetProfile(id int) (bson.M, error) {
 }
 
 func GetCountries() []bson.M {
-	var data []bson.M
+	data := []bson.M{}
 	cursor, _ := countries.Find(ctx, bson.M{})
 	cursor.All(ctx, &data)
 
@@ -123,7 +123,7 @@ func GetCountries() []bson.M {
 }
 
 func GetCities(country_id int) []bson.M {
-	var data []bson.M
+	data := []bson.M{}
 	opts := options.Find().SetProjection(bson.M{"_id": 1, "title": 1})
 	cursor, _ := cities.Find(ctx, bson.M{"country_id": country_id}, opts)
 	cursor.All(ctx, &data)
@@ -134,7 +134,7 @@ func GetCities(country_id int) []bson.M {
 func GetTemplates(c gin.Context) bson.M {
 	id, _ := c.Cookie("id")
 	idInt, _ := strconv.Atoi(id)
-	var text bson.M
+	text := bson.M{}
 
 	opts := options.FindOne().SetProjection(bson.M{"data": 1})
 	templates.FindOne(ctx, bson.M{"_id": idInt}, opts).Decode(&text)

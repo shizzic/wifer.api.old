@@ -30,7 +30,7 @@ type Target struct {
 func GetTarget(target int, c gin.Context) Target {
 	id, _ := c.Cookie("id")
 	idInt, _ := strconv.Atoi(id)
-	var data Target
+	data := Target{}
 
 	if idInt != target && target != 0 {
 		AddView(idInt, target, c)
@@ -51,7 +51,7 @@ func GetTarget(target int, c gin.Context) Target {
 
 // Get like in profile
 func GetLike(id, target int, c gin.Context) (bool, bson.M) {
-	var like bson.M
+	like := bson.M{}
 	opts := options.FindOne().SetProjection(bson.M{"_id": 0, "text": 1})
 
 	if err := likes.FindOne(ctx, bson.M{"user": id, "target": target}, opts).Decode(&like); err == nil {
@@ -66,7 +66,7 @@ func GetPrivate(id, target int, c gin.Context) (bool, []bson.M) {
 	arr := [2]int{}
 	arr[0] = id
 	arr[1] = target
-	var data []bson.M
+	data := []bson.M{}
 	opts := options.Find().SetProjection(bson.M{"_id": 0, "user": 1})
 
 	if cursor, err := private.Find(ctx, bson.M{"user": bson.M{"$in": arr}, "target": bson.M{"$in": arr}}, opts); err == nil {
@@ -110,7 +110,7 @@ func GetNotifications(c gin.Context) map[string]int64 {
 
 // Add view of another user's profile
 func AddView(id, target int, c gin.Context) {
-	var view bson.M
+	view := bson.M{}
 	opts := options.FindOne().SetProjection(bson.M{"_id": 1})
 
 	if err := views.FindOne(ctx, bson.M{"user": id, "target": target}, opts).Decode(&view); err != nil {
@@ -219,7 +219,7 @@ func GetViews(id int, data target) (int, map[string][]bson.M) {
 	q := -1
 	list := []bson.M{}
 	ids := []int32{}
-	var key string
+	key := ""
 
 	targets := []bson.M{}
 	projection := bson.M{"_id": 0, "created_at": 1, "viewed": 1}
@@ -249,18 +249,13 @@ func GetViews(id int, data target) (int, map[string][]bson.M) {
 	cursor.All(ctx, &targets)
 	ids = RetrieveTargets(targets, key)
 
-	if data.Mode {
-		views.UpdateOne(ctx, bson.M{"user": id, "target": bson.M{"$in": ids}}, bson.D{{Key: "$set", Value: bson.D{{Key: "viewed", Value: true}}}})
-	} else {
-		views.UpdateOne(ctx, bson.M{"user": bson.M{"$in": ids}, "target": id}, bson.D{{Key: "$set", Value: bson.D{{Key: "viewed", Value: true}}}})
-	}
+	// if data.Mode {
+	// 	views.UpdateOne(ctx, bson.M{"user": id, "target": bson.M{"$in": ids}}, bson.D{{Key: "$set", Value: bson.D{{Key: "viewed", Value: true}}}})
+	// } else {
+	// 	views.UpdateOne(ctx, bson.M{"user": bson.M{"$in": ids}, "target": id}, bson.D{{Key: "$set", Value: bson.D{{Key: "viewed", Value: true}}}})
+	// }
 
-	opts2 := options.Find().SetProjection(bson.M{"username": 1, "title": 1, "age": 1, "weight": 1, "height": 1, "body": 1, "ethnicity": 1, "public": 1, "private": 1, "avatar": 1, "premium": 1, "country_id": 1, "city_id": 1, "online": 1, "is_about": 1}).
-		SetSort(bson.D{
-			{Key: "premium", Value: -1},
-			{Key: "_id", Value: 1},
-		})
-
+	opts2 := options.Find().SetProjection(bson.M{"username": 1, "title": 1, "age": 1, "weight": 1, "height": 1, "body": 1, "ethnicity": 1, "public": 1, "private": 1, "avatar": 1, "premium": 1, "country_id": 1, "city_id": 1, "online": 1, "is_about": 1})
 	cur, _ := users.Find(ctx, bson.M{"_id": bson.M{"$in": ids}, "status": true}, opts2)
 	cur.All(ctx, &list)
 	res["users"] = list
@@ -274,7 +269,7 @@ func GetLikes(id int, data target) (int, map[string][]bson.M) {
 	q := -1
 	list := []bson.M{}
 	ids := []int32{}
-	var key string
+	key := ""
 
 	targets := []bson.M{}
 	projection := bson.M{"_id": 0, "created_at": 1, "viewed": 1}
@@ -305,17 +300,13 @@ func GetLikes(id int, data target) (int, map[string][]bson.M) {
 	cursor.All(ctx, &targets)
 	ids = RetrieveTargets(targets, key)
 
-	if data.Mode {
-		likes.UpdateOne(ctx, bson.M{"user": id, "target": bson.M{"$in": ids}}, bson.D{{Key: "$set", Value: bson.D{{Key: "viewed", Value: true}}}})
-	} else {
-		likes.UpdateOne(ctx, bson.M{"user": bson.M{"$in": ids}, "target": id}, bson.D{{Key: "$set", Value: bson.D{{Key: "viewed", Value: true}}}})
-	}
+	// if data.Mode {
+	// 	likes.UpdateOne(ctx, bson.M{"user": id, "target": bson.M{"$in": ids}}, bson.D{{Key: "$set", Value: bson.D{{Key: "viewed", Value: true}}}})
+	// } else {
+	// 	likes.UpdateOne(ctx, bson.M{"user": bson.M{"$in": ids}, "target": id}, bson.D{{Key: "$set", Value: bson.D{{Key: "viewed", Value: true}}}})
+	// }
 
-	opts2 := options.Find().SetProjection(bson.M{"username": 1, "title": 1, "age": 1, "weight": 1, "height": 1, "body": 1, "ethnicity": 1, "public": 1, "private": 1, "avatar": 1, "premium": 1, "country_id": 1, "city_id": 1, "online": 1, "is_about": 1}).
-		SetSort(bson.D{
-			{Key: "premium", Value: -1},
-			{Key: "_id", Value: 1},
-		})
+	opts2 := options.Find().SetProjection(bson.M{"username": 1, "title": 1, "age": 1, "weight": 1, "height": 1, "body": 1, "ethnicity": 1, "public": 1, "private": 1, "avatar": 1, "premium": 1, "country_id": 1, "city_id": 1, "online": 1, "is_about": 1})
 
 	cur, _ := users.Find(ctx, bson.M{"_id": bson.M{"$in": ids}, "status": true}, opts2)
 	cur.All(ctx, &list)
@@ -330,7 +321,7 @@ func GetPrivates(id int, data target) (int, map[string][]bson.M) {
 	q := -1
 	list := []bson.M{}
 	ids := []int32{}
-	var key string
+	key := ""
 
 	targets := []bson.M{}
 	projection := bson.M{"_id": 0, "created_at": 1, "viewed": 1}
@@ -360,17 +351,13 @@ func GetPrivates(id int, data target) (int, map[string][]bson.M) {
 	cursor.All(ctx, &targets)
 	ids = RetrieveTargets(targets, key)
 
-	if data.Mode {
-		private.UpdateOne(ctx, bson.M{"user": id, "target": bson.M{"$in": ids}}, bson.D{{Key: "$set", Value: bson.D{{Key: "viewed", Value: true}}}})
-	} else {
-		private.UpdateOne(ctx, bson.M{"user": bson.M{"$in": ids}, "target": id}, bson.D{{Key: "$set", Value: bson.D{{Key: "viewed", Value: true}}}})
-	}
+	// if data.Mode {
+	// 	private.UpdateOne(ctx, bson.M{"user": id, "target": bson.M{"$in": ids}}, bson.D{{Key: "$set", Value: bson.D{{Key: "viewed", Value: true}}}})
+	// } else {
+	// 	private.UpdateOne(ctx, bson.M{"user": bson.M{"$in": ids}, "target": id}, bson.D{{Key: "$set", Value: bson.D{{Key: "viewed", Value: true}}}})
+	// }
 
-	opts2 := options.Find().SetProjection(bson.M{"username": 1, "title": 1, "age": 1, "weight": 1, "height": 1, "body": 1, "ethnicity": 1, "public": 1, "private": 1, "avatar": 1, "premium": 1, "country_id": 1, "city_id": 1, "online": 1, "is_about": 1}).
-		SetSort(bson.D{
-			{Key: "premium", Value: -1},
-			{Key: "_id", Value: 1},
-		})
+	opts2 := options.Find().SetProjection(bson.M{"username": 1, "title": 1, "age": 1, "weight": 1, "height": 1, "body": 1, "ethnicity": 1, "public": 1, "private": 1, "avatar": 1, "premium": 1, "country_id": 1, "city_id": 1, "online": 1, "is_about": 1})
 
 	cur, _ := users.Find(ctx, bson.M{"_id": bson.M{"$in": ids}, "status": true}, opts2)
 	cur.All(ctx, &list)
