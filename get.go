@@ -12,8 +12,7 @@ import (
 type List struct {
 	Limit       int64  `json:"limit"`
 	Skip        int64  `json:"skip"`
-	SortField   string `json:"sortField"`
-	SortValue   int    `json:"sortValue"`
+	Sort        string `json:"sort"`
 	AgeMin      int    `json:"ageMin"`
 	AgeMax      int    `json:"ageMax"`
 	ImagesMin   int    `json:"imagesMin"`
@@ -44,7 +43,7 @@ type List struct {
 
 // Fewer 40ms :D
 func GetUsers(data List, filter bson.M) []bson.M {
-	list := []bson.M{}
+	var list []bson.M
 
 	opts := options.Find().SetProjection(bson.M{
 		"username":   1,
@@ -65,7 +64,7 @@ func GetUsers(data List, filter bson.M) []bson.M {
 	}).
 		SetSort(bson.D{
 			{Key: "premium", Value: -1},
-			{Key: data.SortField, Value: data.SortValue},
+			{Key: data.Sort, Value: -1},
 			{Key: "_id", Value: 1},
 		}).
 		SetLimit(data.Limit).
@@ -78,7 +77,7 @@ func GetUsers(data List, filter bson.M) []bson.M {
 }
 
 func GetProfile(id int) (bson.M, error) {
-	user := bson.M{}
+	var user bson.M
 	opts := options.FindOne().SetProjection(bson.M{
 		"username":   1,
 		"title":      1,
@@ -115,7 +114,7 @@ func GetProfile(id int) (bson.M, error) {
 }
 
 func GetCountries() []bson.M {
-	data := []bson.M{}
+	var data []bson.M
 	cursor, _ := countries.Find(ctx, bson.M{})
 	cursor.All(ctx, &data)
 
@@ -123,7 +122,7 @@ func GetCountries() []bson.M {
 }
 
 func GetCities(country_id int) []bson.M {
-	data := []bson.M{}
+	var data []bson.M
 	opts := options.Find().SetProjection(bson.M{"_id": 1, "title": 1})
 	cursor, _ := cities.Find(ctx, bson.M{"country_id": country_id}, opts)
 	cursor.All(ctx, &data)
@@ -134,7 +133,7 @@ func GetCities(country_id int) []bson.M {
 func GetTemplates(c gin.Context) bson.M {
 	id, _ := c.Cookie("id")
 	idInt, _ := strconv.Atoi(id)
-	text := bson.M{}
+	var text bson.M
 
 	opts := options.FindOne().SetProjection(bson.M{"data": 1})
 	templates.FindOne(ctx, bson.M{"_id": idInt}, opts).Decode(&text)

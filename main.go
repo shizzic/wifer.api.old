@@ -59,6 +59,7 @@ func main() {
 	r.POST("/online", Auth(), func(c *gin.Context) {
 		var data user
 		c.Bind(&data)
+
 		ChangeOnline(data.Online, *c)
 	})
 
@@ -125,47 +126,53 @@ func main() {
 	r.POST("/like", Auth(), func(c *gin.Context) {
 		var data target
 		c.Bind(&data)
-		AddLike(data.Target, *c)
+
+		AddLike(data, *c)
 	})
 
 	r.DELETE("/like", Auth(), func(c *gin.Context) {
 		var data target
 		c.Bind(&data)
+
 		DeleteLike(data.Target, *c)
 	})
 
 	r.POST("/private", Auth(), func(c *gin.Context) {
 		var data target
 		c.Bind(&data)
+
 		AddPrivate(data.Target, *c)
 	})
 
 	r.DELETE("/private", Auth(), func(c *gin.Context) {
 		var data target
 		c.Bind(&data)
+
 		DeletePrivate(data.Target, *c)
 	})
 
-	r.POST("/note", Auth(), func(c *gin.Context) {
-		var data target
-		c.Bind(&data)
-		text := strings.TrimSpace(data.Text)
-		AddNote(data.Target, text, *c)
-	})
+	// r.POST("/note", Auth(), func(c *gin.Context) {
+	// 	var data target
+	// 	c.Bind(&data)
 
-	r.GET("/notifications", Auth(), func(c *gin.Context) {
-		res := GetNotifications(*c)
-		c.JSON(200, res)
-	})
+	// 	text := strings.TrimSpace(data.Text)
+	// 	AddNote(data.Target, text, *c)
+	// })
 
 	r.POST("/targets", Auth(), func(c *gin.Context) {
 		var data target
 		c.BindJSON(&data)
+
 		count, res := GetTargets(data, *c)
 		c.JSON(200, gin.H{
 			"data":  res,
 			"count": count,
 		})
+	})
+
+	r.GET("/notifications", Auth(), func(c *gin.Context) {
+		res := GetNotifications(*c)
+		c.JSON(200, res)
 	})
 
 	r.POST("/upload", Auth(), func(c *gin.Context) {
@@ -199,10 +206,6 @@ func main() {
 		} else {
 			c.JSON(200, gin.H{"text": text})
 		}
-	})
-
-	r.GET("/test", func(c *gin.Context) {
-
 	})
 
 	run()

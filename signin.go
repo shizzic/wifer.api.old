@@ -25,7 +25,7 @@ func Signin(email string, c gin.Context, api bool) (int, error) {
 
 	code := MakeCode()
 
-	user := bson.M{}
+	var user bson.M
 	opts := options.FindOne().SetProjection(bson.M{"_id": 1, "username": 1, "email": 1, "status": 1, "active": 1})
 	notFound := users.FindOne(ctx, bson.M{"email": email}, opts).Decode(&user)
 
@@ -54,7 +54,7 @@ func Signin(email string, c gin.Context, api bool) (int, error) {
 		}
 	} else {
 		// Getting the last user for id
-		last := bson.M{}
+		var last bson.M
 		opts = options.FindOne().SetProjection(bson.M{"_id": 1}).SetSort(bson.D{{Key: "_id", Value: -1}})
 		users.FindOne(ctx, bson.M{}, opts).Decode(&last)
 
@@ -126,7 +126,7 @@ func Signin(email string, c gin.Context, api bool) (int, error) {
 }
 
 func CheckApi(data signin, c gin.Context) (int, error) {
-	email := ""
+	var email string
 	var err error = nil
 
 	switch data.Method {

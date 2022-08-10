@@ -84,7 +84,7 @@ func CheckCode(id int, code string, c gin.Context) error {
 		return errors.New("0")
 	}
 
-	data := bson.M{}
+	var data bson.M
 	opts := options.FindOne().SetProjection(bson.M{"_id": 1})
 
 	if err := ensure.FindOne(ctx, bson.M{"_id": id, "code": code}, opts).Decode(&data); err != nil {
@@ -94,7 +94,7 @@ func CheckCode(id int, code string, c gin.Context) error {
 	// Delete document in ensure collection, if given code was valid
 	ensure.DeleteOne(ctx, bson.M{"_id": id, "code": code})
 
-	user := bson.M{}
+	var user bson.M
 	opt := options.FindOne().SetProjection(bson.M{"username": 1})
 
 	if err := users.FindOne(ctx, bson.M{"_id": id}, opt).Decode(&user); err != nil {

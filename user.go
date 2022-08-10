@@ -143,7 +143,7 @@ func ChangeOnline(value bool, c gin.Context) {
 }
 
 func CheckUsernameAvailable(username string) bool {
-	data := bson.M{}
+	var data bson.M
 	opts := options.FindOne().SetProjection(bson.M{"username": 1})
 	if err := users.FindOne(ctx, bson.M{"username": username}, opts).Decode(&data); err == nil {
 		return false

@@ -30,9 +30,9 @@ type Target struct {
 func GetTarget(target int, c gin.Context) Target {
 	id, _ := c.Cookie("id")
 	idInt, _ := strconv.Atoi(id)
-	data := Target{}
+	var data Target
 
-	if idInt != target && target != 0 {
+	if idInt > 0 && idInt != target && target != 0 {
 		AddView(idInt, target, c)
 
 		if err, like := GetLike(idInt, target, c); err == false {
@@ -51,7 +51,7 @@ func GetTarget(target int, c gin.Context) Target {
 
 // Get like in profile
 func GetLike(id, target int, c gin.Context) (bool, bson.M) {
-	like := bson.M{}
+	var like bson.M
 	opts := options.FindOne().SetProjection(bson.M{"_id": 0, "text": 1})
 
 	if err := likes.FindOne(ctx, bson.M{"user": id, "target": target}, opts).Decode(&like); err == nil {
@@ -66,7 +66,7 @@ func GetPrivate(id, target int, c gin.Context) (bool, []bson.M) {
 	arr := [2]int{}
 	arr[0] = id
 	arr[1] = target
-	data := []bson.M{}
+	var data []bson.M
 	opts := options.Find().SetProjection(bson.M{"_id": 0, "user": 1})
 
 	if cursor, err := private.Find(ctx, bson.M{"user": bson.M{"$in": arr}, "target": bson.M{"$in": arr}}, opts); err == nil {
@@ -110,7 +110,7 @@ func GetNotifications(c gin.Context) map[string]int64 {
 
 // Add view of another user's profile
 func AddView(id, target int, c gin.Context) {
-	view := bson.M{}
+	var view bson.M
 	opts := options.FindOne().SetProjection(bson.M{"_id": 1})
 
 	if err := views.FindOne(ctx, bson.M{"user": id, "target": target}, opts).Decode(&view); err != nil {
@@ -125,19 +125,33 @@ func AddView(id, target int, c gin.Context) {
 }
 
 // User likes another user
-func AddLike(target int, c gin.Context) {
+func AddLike(data target, c gin.Context) {
 	id, _ := c.Cookie("id")
 	idInt, _ := strconv.Atoi(id)
 
-	if idInt != target && target != 0 {
+	if idInt > 0 && idInt != data.Target && data.Target != 0 {
 		date := time.Now().Unix()
-		likes.InsertOne(ctx, bson.D{
-			{Key: "user", Value: idInt},
-			{Key: "target", Value: target},
-			{Key: "text", Value: ""},
-			{Key: "viewed", Value: false},
-			{Key: "created_at", Value: date},
-		})
+		viewed := false
+		var like bson.M
+
+		opts := options.FindOne().SetProjection(bson.M{"_id": 0, "viewed": 1})
+		if err := likes.FindOne(ctx, bson.M{"user": idInt, "target": data.Target}, opts).Decode(&like); err == nil {
+			viewed = like["viewed"].(bool)
+
+			likes.UpdateOne(ctx, bson.M{"user": idInt, "target": data.Target}, bson.D{
+				{Key: "$set", Value: bson.D{{Key: "text", Value: data.Text}}},
+				{Key: "$set", Value: bson.D{{Key: "viewed", Value: viewed}}},
+				{Key: "$set", Value: bson.D{{Key: "created_at", Value: date}}},
+			})
+		} else {
+			likes.InsertOne(ctx, bson.D{
+				{Key: "user", Value: idInt},
+				{Key: "target", Value: data.Target},
+				{Key: "text", Value: data.Text},
+				{Key: "viewed", Value: viewed},
+				{Key: "created_at", Value: date},
+			})
+		}
 	}
 }
 
@@ -146,7 +160,7 @@ func AddPrivate(target int, c gin.Context) {
 	id, _ := c.Cookie("id")
 	idInt, _ := strconv.Atoi(id)
 
-	if idInt != target && target != 0 {
+	if idInt > 0 && idInt != target && target != 0 {
 		date := time.Now().Unix()
 		private.InsertOne(ctx, bson.D{
 			{Key: "user", Value: idInt},
@@ -158,14 +172,14 @@ func AddPrivate(target int, c gin.Context) {
 }
 
 // Adding new note for favorited user
-func AddNote(target int, text string, c gin.Context) {
-	id, _ := c.Cookie("id")
-	idInt, _ := strconv.Atoi(id)
+// func AddNote(target int, text string, c gin.Context) {
+// 	id, _ := c.Cookie("id")
+// 	idInt, _ := strconv.Atoi(id)
 
-	if idInt != target && target != 0 {
-		likes.UpdateOne(ctx, bson.M{"user": idInt, "target": target}, bson.D{{Key: "$set", Value: bson.D{{Key: "text", Value: text}}}})
-	}
-}
+// 	if idInt > 0 && idInt != target && target != 0 {
+// 		likes.UpdateOne(ctx, bson.M{"user": idInt, "target": target}, bson.D{{Key: "$set", Value: bson.D{{Key: "text", Value: text}}}})
+// 	}
+// }
 
 // ___________________________________________________________
 
@@ -176,7 +190,7 @@ func DeleteLike(target int, c gin.Context) {
 	id, _ := c.Cookie("id")
 	idInt, _ := strconv.Atoi(id)
 
-	if idInt != target && target != 0 {
+	if idInt > 0 && idInt != target && target != 0 {
 		likes.DeleteOne(ctx, bson.M{"user": idInt, "target": target})
 	}
 }
@@ -186,7 +200,7 @@ func DeletePrivate(target int, c gin.Context) {
 	id, _ := c.Cookie("id")
 	idInt, _ := strconv.Atoi(id)
 
-	if idInt != target && target != 0 {
+	if idInt > 0 && idInt != target && target != 0 {
 		private.DeleteOne(ctx, bson.M{"user": idInt, "target": target})
 	}
 }
@@ -217,11 +231,11 @@ func GetTargets(data target, c gin.Context) (int, map[string][]bson.M) {
 func GetViews(id int, data target) (int, map[string][]bson.M) {
 	res := make(map[string][]bson.M)
 	q := -1
-	list := []bson.M{}
-	ids := []int32{}
-	key := ""
+	var list []bson.M
+	var ids []int32
+	var key string
+	var targets []bson.M
 
-	targets := []bson.M{}
 	projection := bson.M{"_id": 0, "created_at": 1, "viewed": 1}
 	filter := bson.M{}
 
@@ -249,11 +263,11 @@ func GetViews(id int, data target) (int, map[string][]bson.M) {
 	cursor.All(ctx, &targets)
 	ids = RetrieveTargets(targets, key)
 
-	// if data.Mode {
-	// 	views.UpdateOne(ctx, bson.M{"user": id, "target": bson.M{"$in": ids}}, bson.D{{Key: "$set", Value: bson.D{{Key: "viewed", Value: true}}}})
-	// } else {
-	// 	views.UpdateOne(ctx, bson.M{"user": bson.M{"$in": ids}, "target": id}, bson.D{{Key: "$set", Value: bson.D{{Key: "viewed", Value: true}}}})
-	// }
+	if data.Mode {
+		views.UpdateMany(ctx, bson.M{"user": id, "target": bson.M{"$in": ids}}, bson.D{{Key: "$set", Value: bson.D{{Key: "viewed", Value: true}}}})
+	} else {
+		views.UpdateMany(ctx, bson.M{"user": bson.M{"$in": ids}, "target": id}, bson.D{{Key: "$set", Value: bson.D{{Key: "viewed", Value: true}}}})
+	}
 
 	opts2 := options.Find().SetProjection(bson.M{"username": 1, "title": 1, "age": 1, "weight": 1, "height": 1, "body": 1, "ethnicity": 1, "public": 1, "private": 1, "avatar": 1, "premium": 1, "country_id": 1, "city_id": 1, "online": 1, "is_about": 1})
 	cur, _ := users.Find(ctx, bson.M{"_id": bson.M{"$in": ids}, "status": true}, opts2)
@@ -267,11 +281,11 @@ func GetViews(id int, data target) (int, map[string][]bson.M) {
 func GetLikes(id int, data target) (int, map[string][]bson.M) {
 	res := make(map[string][]bson.M)
 	q := -1
-	list := []bson.M{}
-	ids := []int32{}
-	key := ""
+	var list []bson.M
+	var ids []int32
+	var key string
+	var targets []bson.M
 
-	targets := []bson.M{}
 	projection := bson.M{"_id": 0, "created_at": 1, "viewed": 1}
 	filter := bson.M{}
 
@@ -300,11 +314,11 @@ func GetLikes(id int, data target) (int, map[string][]bson.M) {
 	cursor.All(ctx, &targets)
 	ids = RetrieveTargets(targets, key)
 
-	// if data.Mode {
-	// 	likes.UpdateOne(ctx, bson.M{"user": id, "target": bson.M{"$in": ids}}, bson.D{{Key: "$set", Value: bson.D{{Key: "viewed", Value: true}}}})
-	// } else {
-	// 	likes.UpdateOne(ctx, bson.M{"user": bson.M{"$in": ids}, "target": id}, bson.D{{Key: "$set", Value: bson.D{{Key: "viewed", Value: true}}}})
-	// }
+	if data.Mode {
+		likes.UpdateMany(ctx, bson.M{"user": id, "target": bson.M{"$in": ids}}, bson.D{{Key: "$set", Value: bson.D{{Key: "viewed", Value: true}}}})
+	} else {
+		likes.UpdateMany(ctx, bson.M{"user": bson.M{"$in": ids}, "target": id}, bson.D{{Key: "$set", Value: bson.D{{Key: "viewed", Value: true}}}})
+	}
 
 	opts2 := options.Find().SetProjection(bson.M{"username": 1, "title": 1, "age": 1, "weight": 1, "height": 1, "body": 1, "ethnicity": 1, "public": 1, "private": 1, "avatar": 1, "premium": 1, "country_id": 1, "city_id": 1, "online": 1, "is_about": 1})
 
@@ -319,11 +333,11 @@ func GetLikes(id int, data target) (int, map[string][]bson.M) {
 func GetPrivates(id int, data target) (int, map[string][]bson.M) {
 	res := make(map[string][]bson.M)
 	q := -1
-	list := []bson.M{}
-	ids := []int32{}
-	key := ""
+	var list []bson.M
+	var ids []int32
+	var key string
+	var targets []bson.M
 
-	targets := []bson.M{}
 	projection := bson.M{"_id": 0, "created_at": 1, "viewed": 1}
 	filter := bson.M{}
 
@@ -351,11 +365,11 @@ func GetPrivates(id int, data target) (int, map[string][]bson.M) {
 	cursor.All(ctx, &targets)
 	ids = RetrieveTargets(targets, key)
 
-	// if data.Mode {
-	// 	private.UpdateOne(ctx, bson.M{"user": id, "target": bson.M{"$in": ids}}, bson.D{{Key: "$set", Value: bson.D{{Key: "viewed", Value: true}}}})
-	// } else {
-	// 	private.UpdateOne(ctx, bson.M{"user": bson.M{"$in": ids}, "target": id}, bson.D{{Key: "$set", Value: bson.D{{Key: "viewed", Value: true}}}})
-	// }
+	if data.Mode {
+		private.UpdateMany(ctx, bson.M{"user": id, "target": bson.M{"$in": ids}}, bson.D{{Key: "$set", Value: bson.D{{Key: "viewed", Value: true}}}})
+	} else {
+		private.UpdateMany(ctx, bson.M{"user": bson.M{"$in": ids}, "target": id}, bson.D{{Key: "$set", Value: bson.D{{Key: "viewed", Value: true}}}})
+	}
 
 	opts2 := options.Find().SetProjection(bson.M{"username": 1, "title": 1, "age": 1, "weight": 1, "height": 1, "body": 1, "ethnicity": 1, "public": 1, "private": 1, "avatar": 1, "premium": 1, "country_id": 1, "city_id": 1, "online": 1, "is_about": 1})
 
