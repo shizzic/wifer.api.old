@@ -2,6 +2,7 @@ package main
 
 import (
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -133,13 +134,14 @@ func AddLike(data target, c gin.Context) {
 		date := time.Now().Unix()
 		viewed := false
 		var like bson.M
+		text := strings.TrimSpace(data.Text)
 
 		opts := options.FindOne().SetProjection(bson.M{"_id": 0, "viewed": 1})
 		if err := likes.FindOne(ctx, bson.M{"user": idInt, "target": data.Target}, opts).Decode(&like); err == nil {
 			viewed = like["viewed"].(bool)
 
 			likes.UpdateOne(ctx, bson.M{"user": idInt, "target": data.Target}, bson.D{
-				{Key: "$set", Value: bson.D{{Key: "text", Value: data.Text}}},
+				{Key: "$set", Value: bson.D{{Key: "text", Value: text}}},
 				{Key: "$set", Value: bson.D{{Key: "viewed", Value: viewed}}},
 				{Key: "$set", Value: bson.D{{Key: "created_at", Value: date}}},
 			})
@@ -147,7 +149,7 @@ func AddLike(data target, c gin.Context) {
 			likes.InsertOne(ctx, bson.D{
 				{Key: "user", Value: idInt},
 				{Key: "target", Value: data.Target},
-				{Key: "text", Value: data.Text},
+				{Key: "text", Value: text},
 				{Key: "viewed", Value: viewed},
 				{Key: "created_at", Value: date},
 			})
@@ -170,16 +172,6 @@ func AddPrivate(target int, c gin.Context) {
 		})
 	}
 }
-
-// Adding new note for favorited user
-// func AddNote(target int, text string, c gin.Context) {
-// 	id, _ := c.Cookie("id")
-// 	idInt, _ := strconv.Atoi(id)
-
-// 	if idInt > 0 && idInt != target && target != 0 {
-// 		likes.UpdateOne(ctx, bson.M{"user": idInt, "target": target}, bson.D{{Key: "$set", Value: bson.D{{Key: "text", Value: text}}}})
-// 	}
-// }
 
 // ___________________________________________________________
 
