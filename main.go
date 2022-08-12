@@ -169,7 +169,7 @@ func main() {
 
 	r.POST("/upload", Auth(), func(c *gin.Context) {
 		if err := UploadImage(c.PostForm("dir"), *c); err != nil {
-			c.JSON(500, gin.H{"error": err.Error()})
+			c.JSON(400, gin.H{"error": err.Error()})
 		} else {
 			c.JSON(200, gin.H{})
 		}
@@ -194,7 +194,7 @@ func main() {
 		text, err := Translate(c.PostForm("text"), c.PostForm("lang"))
 
 		if err != nil {
-			c.JSON(500, gin.H{"error": "0"})
+			c.JSON(400, gin.H{"error": "0"})
 		} else {
 			c.JSON(200, gin.H{"text": text})
 		}

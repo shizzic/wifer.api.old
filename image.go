@@ -37,13 +37,13 @@ func UploadImage(dir string, c gin.Context) error {
 		if all < 20 {
 			if dir != "private" && avatar != nil {
 				c.SaveUploadedFile(file, path+"/avatar.webp")
-				ConvertResize(path + "/avatar.webp")
+				Convert(path + "/avatar.webp")
 				UpdateDataBaseImages(idInt, path)
 			} else {
 				files, _ := ioutil.ReadDir(path + "/" + dir)
 				root := path + "/" + dir + "/" + fmt.Sprint(len(files)+1) + ".webp"
 				c.SaveUploadedFile(file, root)
-				ConvertResize(root)
+				Convert(root)
 				UpdateDataBaseImages(idInt, path)
 			}
 		} else {
@@ -170,10 +170,9 @@ func UpdateDataBaseImages(id int, path string) {
 	})
 }
 
-// Resize each uploaded image to 1 size format and convert each image to WEBP
-func ConvertResize(dir string) {
+// Convert image to WEBP format
+func Convert(dir string) {
 	buffer, _ := bimg.Read(dir)
-	// newImage, _ := bimg.NewImage(buffer).Resize(750, 1000)
 	new, _ := bimg.NewImage(buffer).Convert(bimg.WEBP)
 	bimg.Write(dir, new)
 }
