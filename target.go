@@ -33,7 +33,7 @@ func GetTarget(target int, c gin.Context) Target {
 	idInt, _ := strconv.Atoi(id)
 	var data Target
 
-	if idInt > 0 && idInt != target && target != 0 {
+	if idInt > 0 && idInt != target && target > 0 {
 		AddView(idInt, target, c)
 
 		if err, like := GetLike(idInt, target, c); err == false {
@@ -111,18 +111,15 @@ func GetNotifications(c gin.Context) map[string]int64 {
 
 // Add view of another user's profile
 func AddView(id, target int, c gin.Context) {
-	var view bson.M
-	opts := options.FindOne().SetProjection(bson.M{"_id": 1})
+	views.DeleteOne(ctx, bson.M{"user": id, "target": target})
 
-	if err := views.FindOne(ctx, bson.M{"user": id, "target": target}, opts).Decode(&view); err != nil {
-		date := time.Now().Unix()
-		views.InsertOne(ctx, bson.D{
-			{Key: "user", Value: id},
-			{Key: "target", Value: target},
-			{Key: "viewed", Value: false},
-			{Key: "created_at", Value: date},
-		})
-	}
+	date := time.Now().Unix()
+	views.InsertOne(ctx, bson.D{
+		{Key: "user", Value: id},
+		{Key: "target", Value: target},
+		{Key: "viewed", Value: false},
+		{Key: "created_at", Value: date},
+	})
 }
 
 // User likes another user
@@ -130,7 +127,7 @@ func AddLike(data target, c gin.Context) {
 	id, _ := c.Cookie("id")
 	idInt, _ := strconv.Atoi(id)
 
-	if idInt > 0 && idInt != data.Target && data.Target != 0 {
+	if idInt > 0 && idInt != data.Target && data.Target > 0 {
 		date := time.Now().Unix()
 		viewed := false
 		var like bson.M
@@ -162,7 +159,7 @@ func AddPrivate(target int, c gin.Context) {
 	id, _ := c.Cookie("id")
 	idInt, _ := strconv.Atoi(id)
 
-	if idInt > 0 && idInt != target && target != 0 {
+	if idInt > 0 && idInt != target && target > 0 {
 		date := time.Now().Unix()
 		private.InsertOne(ctx, bson.D{
 			{Key: "user", Value: idInt},
@@ -182,7 +179,7 @@ func DeleteLike(target int, c gin.Context) {
 	id, _ := c.Cookie("id")
 	idInt, _ := strconv.Atoi(id)
 
-	if idInt > 0 && idInt != target && target != 0 {
+	if idInt > 0 && idInt != target && target > 0 {
 		likes.DeleteOne(ctx, bson.M{"user": idInt, "target": target})
 	}
 }
@@ -192,7 +189,7 @@ func DeletePrivate(target int, c gin.Context) {
 	id, _ := c.Cookie("id")
 	idInt, _ := strconv.Atoi(id)
 
-	if idInt > 0 && idInt != target && target != 0 {
+	if idInt > 0 && idInt != target && target > 0 {
 		private.DeleteOne(ctx, bson.M{"user": idInt, "target": target})
 	}
 }

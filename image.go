@@ -173,6 +173,6 @@ func UpdateDataBaseImages(id int, path string) {
 // Convert image to WEBP format
 func Convert(dir string) {
 	buffer, _ := bimg.Read(dir)
-	new, _ := bimg.NewImage(buffer).Convert(bimg.WEBP)
-	bimg.Write(dir, new)
+	converted, _ := bimg.NewImage(buffer).Convert(bimg.WEBP)
+	bimg.Write(dir, converted)
 }
