@@ -200,5 +200,12 @@ func main() {
 		}
 	})
 
+	hub := newHub()
+	go hub.run()
+
+	router.GET("/ws", func(c *gin.Context) {
+		serveWs(hub, c.Writer, c.Request)
+	})
+
 	run()
 }
