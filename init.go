@@ -53,7 +53,7 @@ func connect() *mongo.Client {
 // Redirect every NOT https request to https
 func redirect() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		if c.Request.Proto != "HTTP/2.0" && c.Request.URL.String() != "/ws" {
+		if c.Request.Proto != "HTTP/2.0" {
 			c.Redirect(302, "https://"+domainBack+c.Request.URL.String())
 			return
 		}

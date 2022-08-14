@@ -3,7 +3,7 @@ package main
 import (
 	"errors"
 	"math/rand"
-	h "net/http"
+	net "net/http"
 	"strconv"
 	"time"
 
@@ -113,7 +113,7 @@ func CheckCode(id int, code string, c gin.Context) error {
 
 // Cookies for auth
 func MakeCookies(id, username string, time int, c gin.Context) {
-	c.SetSameSite(h.SameSiteNoneMode)
+	c.SetSameSite(net.SameSiteNoneMode)
 	c.SetCookie("token", EncryptToken(username), time, "/", "."+domainBack, true, true)
 	c.SetCookie("username", username, time, "/", "."+domainBack, true, true)
 	c.SetCookie("id", id, time, "/", "."+domainBack, true, true)

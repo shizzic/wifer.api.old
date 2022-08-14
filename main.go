@@ -1,6 +1,7 @@
 package main
 
 import (
+	"strconv"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -200,11 +201,10 @@ func main() {
 		}
 	})
 
-	hub := newHub()
-	go hub.run()
-
-	router.GET("/ws", func(c *gin.Context) {
-		serveWs(hub, c.Writer, c.Request)
+	r.GET("/ws", func(c *gin.Context) {
+		id, _ := c.Cookie("id")
+		idInt, _ := strconv.Atoi(id)
+		Chat(c.Writer, c.Request, idInt)
 	})
 
 	run()
