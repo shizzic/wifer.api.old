@@ -87,21 +87,21 @@ func CheckCode(id int, code string, c gin.Context) error {
 	var data bson.M
 	opts := options.FindOne().SetProjection(bson.M{"_id": 1})
 
-	if err := ensure.FindOne(ctx, bson.M{"_id": id, "code": code}, opts).Decode(&data); err != nil {
+	if err := DB["ensure"].FindOne(ctx, bson.M{"_id": id, "code": code}, opts).Decode(&data); err != nil {
 		return errors.New("1")
 	}
 
 	// Delete document in ensure collection, if given code was valid
-	ensure.DeleteOne(ctx, bson.M{"_id": id, "code": code})
+	DB["ensure"].DeleteOne(ctx, bson.M{"_id": id, "code": code})
 
 	var user bson.M
 	opt := options.FindOne().SetProjection(bson.M{"username": 1})
 
-	if err := users.FindOne(ctx, bson.M{"_id": id}, opt).Decode(&user); err != nil {
+	if err := DB["users"].FindOne(ctx, bson.M{"_id": id}, opt).Decode(&user); err != nil {
 		return errors.New("2")
 	}
 
-	users.UpdateOne(ctx, bson.M{"_id": id}, bson.D{{Key: "$set", Value: bson.D{
+	DB["users"].UpdateOne(ctx, bson.M{"_id": id}, bson.D{{Key: "$set", Value: bson.D{
 		{Key: "status", Value: true},
 		{Key: "active", Value: true},
 	}}})

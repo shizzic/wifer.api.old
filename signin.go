@@ -27,7 +27,7 @@ func Signin(email string, c gin.Context, api bool) (int, error) {
 
 	var user bson.M
 	opts := options.FindOne().SetProjection(bson.M{"_id": 1, "username": 1, "email": 1, "status": 1, "active": 1})
-	notFound := users.FindOne(ctx, bson.M{"email": email}, opts).Decode(&user)
+	notFound := DB["users"].FindOne(ctx, bson.M{"email": email}, opts).Decode(&user)
 
 	if notFound == nil {
 		if !user["status"].(bool) {
@@ -35,15 +35,15 @@ func Signin(email string, c gin.Context, api bool) (int, error) {
 		}
 
 		if !user["active"].(bool) {
-			users.UpdateOne(ctx, bson.M{"_id": user["_id"].(int32)}, bson.D{{Key: "$set", Value: bson.D{{Key: "active", Value: true}}}})
+			DB["users"].UpdateOne(ctx, bson.M{"_id": user["_id"].(int32)}, bson.D{{Key: "$set", Value: bson.D{{Key: "active", Value: true}}}})
 		}
 
 		if api {
 			MakeCookies(strconv.Itoa(int(user["_id"].(int32))), user["username"].(string), 86400*120, c)
 			return int(user["_id"].(int32)), nil
 		} else {
-			ensure.DeleteOne(ctx, bson.M{"_id": user["_id"]})
-			ensure.InsertOne(ctx, bson.D{
+			DB["ensure"].DeleteOne(ctx, bson.M{"_id": user["_id"]})
+			DB["ensure"].InsertOne(ctx, bson.D{
 				{Key: "_id", Value: user["_id"]},
 				{Key: "code", Value: code},
 			})
@@ -56,7 +56,7 @@ func Signin(email string, c gin.Context, api bool) (int, error) {
 		// Getting the last user for id
 		var last bson.M
 		opts = options.FindOne().SetProjection(bson.M{"_id": 1}).SetSort(bson.D{{Key: "_id", Value: -1}})
-		users.FindOne(ctx, bson.M{}, opts).Decode(&last)
+		DB["users"].FindOne(ctx, bson.M{}, opts).Decode(&last)
 
 		id := 1
 		if last["_id"] != nil {
@@ -64,7 +64,7 @@ func Signin(email string, c gin.Context, api bool) (int, error) {
 		}
 		date := time.Now().Unix()
 
-		ObjectId, err := users.InsertOne(ctx, bson.D{
+		ObjectId, err := DB["users"].InsertOne(ctx, bson.D{
 			{Key: "_id", Value: id},
 			{Key: "username", Value: strconv.Itoa(id)},
 			{Key: "email", Value: email},
@@ -107,12 +107,12 @@ func Signin(email string, c gin.Context, api bool) (int, error) {
 			MakeCookies(id, id, 86400*120, c)
 			return int(ObjectId.InsertedID.(int32)), nil
 		} else {
-			if _, err := ensure.InsertOne(ctx, bson.D{
+			if _, err := DB["ensure"].InsertOne(ctx, bson.D{
 				{Key: "_id", Value: ObjectId.InsertedID},
 				{Key: "code", Value: code},
 			}); err != nil {
 				// Delete new user, because code wasn't added
-				users.DeleteOne(ctx, bson.M{"_id": int(ObjectId.InsertedID.(int32))})
+				DB["users"].DeleteOne(ctx, bson.M{"_id": int(ObjectId.InsertedID.(int32))})
 				return 0, errors.New("3")
 			}
 

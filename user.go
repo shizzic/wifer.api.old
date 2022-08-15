@@ -103,7 +103,7 @@ func Change(data user, c gin.Context) error {
 		isAbout = false
 	}
 
-	if _, err := users.UpdateOne(ctx, bson.M{"_id": idInt}, bson.D{
+	if _, err := DB["users"].UpdateOne(ctx, bson.M{"_id": idInt}, bson.D{
 		{Key: "$set", Value: bson.D{{Key: "username", Value: username}}},
 		{Key: "$set", Value: bson.D{{Key: "title", Value: title}}},
 		{Key: "$set", Value: bson.D{{Key: "about", Value: about}}},
@@ -136,7 +136,7 @@ func ChangeOnline(value bool, c gin.Context) {
 	id, _ := c.Cookie("id")
 	idInt, _ := strconv.Atoi(id)
 
-	users.UpdateOne(ctx, bson.M{"_id": idInt}, bson.D{
+	DB["users"].UpdateOne(ctx, bson.M{"_id": idInt}, bson.D{
 		{Key: "$set", Value: bson.D{{Key: "online", Value: value}}},
 		{Key: "$set", Value: bson.D{{Key: "last_time", Value: time.Now().Unix()}}},
 	})
@@ -145,7 +145,7 @@ func ChangeOnline(value bool, c gin.Context) {
 func CheckUsernameAvailable(username string) bool {
 	var data bson.M
 	opts := options.FindOne().SetProjection(bson.M{"username": 1})
-	if err := users.FindOne(ctx, bson.M{"username": username}, opts).Decode(&data); err == nil {
+	if err := DB["users"].FindOne(ctx, bson.M{"username": username}, opts).Decode(&data); err == nil {
 		return false
 	}
 
@@ -156,8 +156,8 @@ func CreateTemplates(text string, c gin.Context) {
 	id, _ := c.Cookie("id")
 	idInt, _ := strconv.Atoi(id)
 
-	templates.DeleteOne(ctx, bson.M{"_id": idInt})
-	templates.InsertOne(ctx, bson.D{
+	DB["templates"].DeleteOne(ctx, bson.M{"_id": idInt})
+	DB["templates"].InsertOne(ctx, bson.D{
 		{Key: "_id", Value: idInt},
 		{Key: "data", Value: text},
 	})
@@ -167,7 +167,7 @@ func Logout(c gin.Context) {
 	id, _ := c.Cookie("id")
 	idInt, _ := strconv.Atoi(id)
 
-	users.UpdateOne(ctx, bson.M{"_id": idInt}, bson.D{
+	DB["users"].UpdateOne(ctx, bson.M{"_id": idInt}, bson.D{
 		{Key: "$set", Value: bson.D{{Key: "online", Value: false}}},
 		{Key: "$set", Value: bson.D{{Key: "last_time", Value: time.Now().Unix()}}},
 	})
@@ -180,7 +180,7 @@ func DeactivateAccount(c gin.Context) {
 	id, _ := c.Cookie("id")
 	idInt, _ := strconv.Atoi(id)
 
-	users.UpdateOne(ctx, bson.M{"_id": idInt}, bson.D{
+	DB["users"].UpdateOne(ctx, bson.M{"_id": idInt}, bson.D{
 		{Key: "$set", Value: bson.D{{Key: "active", Value: false}}},
 		{Key: "$set", Value: bson.D{{Key: "online", Value: false}}},
 		{Key: "$set", Value: bson.D{{Key: "last_time", Value: time.Now().Unix()}}},

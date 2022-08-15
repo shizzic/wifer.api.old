@@ -131,13 +131,6 @@ func main() {
 		AddLike(data, *c)
 	})
 
-	r.DELETE("/like", Auth(), func(c *gin.Context) {
-		var data target
-		c.Bind(&data)
-
-		DeleteLike(data.Target, *c)
-	})
-
 	r.POST("/private", Auth(), func(c *gin.Context) {
 		var data target
 		c.Bind(&data)
@@ -145,11 +138,32 @@ func main() {
 		AddPrivate(data.Target, *c)
 	})
 
+	r.POST("/access", Auth(), func(c *gin.Context) {
+		var data target
+		c.Bind(&data)
+
+		AddAccess(data.Target, *c)
+	})
+
+	r.DELETE("/like", Auth(), func(c *gin.Context) {
+		var data target
+		c.Bind(&data)
+
+		DeleteLike(data.Target, *c)
+	})
+
 	r.DELETE("/private", Auth(), func(c *gin.Context) {
 		var data target
 		c.Bind(&data)
 
 		DeletePrivate(data.Target, *c)
+	})
+
+	r.DELETE("/access", Auth(), func(c *gin.Context) {
+		var data target
+		c.Bind(&data)
+
+		DeleteAccess(data.Target, *c)
 	})
 
 	r.POST("/targets", Auth(), func(c *gin.Context) {

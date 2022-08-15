@@ -70,7 +70,7 @@ func GetUsers(data List, filter bson.M) []bson.M {
 		SetLimit(data.Limit).
 		SetSkip(data.Skip)
 
-	cursor, _ := users.Find(ctx, filter, opts)
+	cursor, _ := DB["users"].Find(ctx, filter, opts)
 	cursor.All(ctx, &list)
 
 	return list
@@ -106,7 +106,7 @@ func GetProfile(id int) (bson.M, error) {
 		"city_id":    1,
 	})
 
-	if err := users.FindOne(ctx, bson.M{"_id": id, "status": true}, opts).Decode(&user); err != nil {
+	if err := DB["users"].FindOne(ctx, bson.M{"_id": id, "status": true}, opts).Decode(&user); err != nil {
 		return user, errors.New("0")
 	}
 
@@ -115,7 +115,7 @@ func GetProfile(id int) (bson.M, error) {
 
 func GetCountries() []bson.M {
 	var data []bson.M
-	cursor, _ := countries.Find(ctx, bson.M{})
+	cursor, _ := DB["countries"].Find(ctx, bson.M{})
 	cursor.All(ctx, &data)
 
 	return data
@@ -124,7 +124,7 @@ func GetCountries() []bson.M {
 func GetCities(country_id int) []bson.M {
 	var data []bson.M
 	opts := options.Find().SetProjection(bson.M{"_id": 1, "title": 1})
-	cursor, _ := cities.Find(ctx, bson.M{"country_id": country_id}, opts)
+	cursor, _ := DB["cities"].Find(ctx, bson.M{"country_id": country_id}, opts)
 	cursor.All(ctx, &data)
 
 	return data
@@ -136,13 +136,13 @@ func GetTemplates(c gin.Context) bson.M {
 	var text bson.M
 
 	opts := options.FindOne().SetProjection(bson.M{"data": 1})
-	templates.FindOne(ctx, bson.M{"_id": idInt}, opts).Decode(&text)
+	DB["templates"].FindOne(ctx, bson.M{"_id": idInt}, opts).Decode(&text)
 
 	return text
 }
 
 func CountUsers(filter bson.M) int64 {
-	count, err := users.CountDocuments(ctx, filter)
+	count, err := DB["users"].CountDocuments(ctx, filter)
 
 	if err != nil {
 		return 0

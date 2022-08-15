@@ -162,7 +162,7 @@ func UpdateDataBaseImages(id int, path string) {
 	pubLen := len(public)
 	priLen := len(private)
 
-	users.UpdateOne(ctx, bson.M{"_id": id}, bson.D{
+	DB["users"].UpdateOne(ctx, bson.M{"_id": id}, bson.D{
 		{Key: "$set", Value: bson.D{{Key: "avatar", Value: avatar}}},
 		{Key: "$set", Value: bson.D{{Key: "public", Value: pubLen}}},
 		{Key: "$set", Value: bson.D{{Key: "private", Value: priLen}}},

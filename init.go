@@ -21,14 +21,18 @@ var ctx = context.TODO()
 var r = gin.Default()      // https server (MAIN)
 var router = gin.Default() // http server
 var con = connect()        // database
-var users = con.Database("wifer").Collection("users")
-var ensure = con.Database("wifer").Collection("ensure")
-var countries = con.Database("wifer").Collection("countries")
-var cities = con.Database("wifer").Collection("cities")
-var templates = con.Database("wifer").Collection("templates")
-var views = con.Database("wifer").Collection("views")
-var likes = con.Database("wifer").Collection("likes")
-var private = con.Database("wifer").Collection("private")
+
+var DB = map[string]*mongo.Collection{
+	"users":     con.Database("wifer").Collection("users"),
+	"ensure":    con.Database("wifer").Collection("ensure"),
+	"countries": con.Database("wifer").Collection("countries"),
+	"cities":    con.Database("wifer").Collection("cities"),
+	"templates": con.Database("wifer").Collection("templates"),
+	"views":     con.Database("wifer").Collection("views"),
+	"likes":     con.Database("wifer").Collection("likes"),
+	"private":   con.Database("wifer").Collection("private"),
+	"access":    con.Database("wifer").Collection("access"),
+}
 
 const mongoConnect string = "mongodb://shizzic:WebDev77@wifer-test.ru:27017/test?authSource=admin&readPreference=primary&appname=MongoDB%20Compass&directConnection=true&ssl=false"
 
@@ -88,7 +92,7 @@ func run() {
 }
 
 func clearOnline() {
-	users.UpdateMany(ctx, bson.M{"online": true},
+	DB["users"].UpdateMany(ctx, bson.M{"online": true},
 		bson.D{{Key: "$set", Value: bson.D{{Key: "online", Value: false}}}},
 	)
 }
