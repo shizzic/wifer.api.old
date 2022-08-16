@@ -215,10 +215,32 @@ func main() {
 		}
 	})
 
-	r.GET("/ws", func(c *gin.Context) {
+	r.GET("/ws", Auth(), func(c *gin.Context) {
 		id, _ := c.Cookie("id")
 		idInt, _ := strconv.Atoi(id)
 		Chat(c.Writer, c.Request, idInt)
+	})
+
+	r.GET("/getRooms", Auth(), func(c *gin.Context) {
+		id, _ := c.Cookie("id")
+		idInt, _ := strconv.Atoi(id)
+		GetRooms(idInt)
+	})
+
+	r.GET("/getMessages", Auth(), func(c *gin.Context) {
+		id, _ := c.Cookie("id")
+		idInt, _ := strconv.Atoi(id)
+		GetMessages(idInt)
+	})
+
+	r.GET("/checkAvatar", Auth(), func(c *gin.Context) {
+		res := CheckAvatar(*c)
+		c.JSON(200, res)
+	})
+
+	r.GET("/checkMessages", Auth(), func(c *gin.Context) {
+		res := checkMessages(*c)
+		c.JSON(200, res)
 	})
 
 	run()

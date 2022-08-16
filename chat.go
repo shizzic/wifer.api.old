@@ -54,3 +54,11 @@ func quit(id int) {
 
 	delete(clients, id) // Удаляем соединение
 }
+
+func GetRooms(id int) {
+
+}
+
+func GetMessages(id int) {
+
+}

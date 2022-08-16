@@ -32,6 +32,7 @@ var DB = map[string]*mongo.Collection{
 	"likes":     con.Database("wifer").Collection("likes"),
 	"private":   con.Database("wifer").Collection("private"),
 	"access":    con.Database("wifer").Collection("access"),
+	"messages":  con.Database("wifer").Collection("messages"),
 }
 
 const mongoConnect string = "mongodb://shizzic:WebDev77@wifer-test.ru:27017/test?authSource=admin&readPreference=primary&appname=MongoDB%20Compass&directConnection=true&ssl=false"
