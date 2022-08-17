@@ -222,15 +222,15 @@ func main() {
 	})
 
 	r.GET("/getRooms", Auth(), func(c *gin.Context) {
-		id, _ := c.Cookie("id")
-		idInt, _ := strconv.Atoi(id)
-		GetRooms(idInt)
+		// GetRooms(*c)
 	})
 
 	r.GET("/getMessages", Auth(), func(c *gin.Context) {
-		id, _ := c.Cookie("id")
-		idInt, _ := strconv.Atoi(id)
-		GetMessages(idInt)
+		var data messages
+		c.Bind(&data)
+
+		res := GetMessages(data, *c)
+		c.JSON(200, res)
 	})
 
 	r.GET("/checkAvatar", Auth(), func(c *gin.Context) {
