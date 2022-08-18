@@ -215,7 +215,7 @@ func main() {
 		}
 	})
 
-	r.GET("/ws", Auth(), func(c *gin.Context) {
+	r.GET("/chat", Auth(), func(c *gin.Context) {
 		id, _ := c.Cookie("id")
 		idInt, _ := strconv.Atoi(id)
 		Chat(c.Writer, c.Request, idInt)

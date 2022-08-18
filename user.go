@@ -194,8 +194,8 @@ func CheckAvatar(c gin.Context) bool {
 	idInt, _ := strconv.Atoi(id)
 
 	var user bson.M
-	opts := options.FindOne().SetProjection(bson.M{"avatar": 1})
-	if err := DB["users"].FindOne(ctx, bson.M{"_id": idInt}, opts).Decode(&user); err == nil {
+	opts := options.FindOne().SetProjection(bson.M{"_id": 0, "avatar": 1})
+	if err := DB["users"].FindOne(ctx, bson.M{"_id": idInt}, opts).Decode(&user); err != nil {
 		return false
 	}
 

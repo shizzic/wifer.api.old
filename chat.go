@@ -31,6 +31,10 @@ var rooms = make(map[int]map[int]bool)
 func Chat(w http.ResponseWriter, r *http.Request, id int) {
 	con, _ := upgrader.Upgrade(w, r, nil)
 	defer con.Close() // Закрываем соединение
+	if _, exist := clients[id]; exist {
+		clients[id].Close()
+		delete(clients, id)
+	}
 	clients[id] = con
 	enter(id)
 	defer quit(id)
@@ -39,6 +43,9 @@ func Chat(w http.ResponseWriter, r *http.Request, id int) {
 		var msg struct {
 			Message string `json:"message"`
 			Api     string `json:"api"`
+			Access  bool   `json:"access"`
+			Target  int    `json:"target"`
+			User    int    `json:"user"`
 		}
 
 		err := con.ReadJSON(&msg)
@@ -46,7 +53,12 @@ func Chat(w http.ResponseWriter, r *http.Request, id int) {
 			break
 		}
 
-		con.WriteJSON(msg)
+		if _, exist := clients[msg.Target]; exist {
+			switch msg.Api {
+			case "access":
+				clients[msg.Target].WriteJSON(msg)
+			}
+		}
 	}
 }
 
@@ -65,6 +77,11 @@ func quit(id int) {
 
 	delete(clients, id) // Удаляем соединение
 }
+
+// func GetRooms(c gin.Context) {
+// 	id, _ := c.Cookie("id")
+// 	idInt, _ := strconv.Atoi(id)
+// }
 
 func GetMessages(data messages, c gin.Context) map[string][]bson.M {
 	var res = make(map[string][]bson.M)
@@ -117,8 +134,3 @@ func CheckRoomAccess(id, target int, filter primitive.M) []bson.M {
 	cursor.All(ctx, &accesses)
 	return accesses
 }
-
-// func GetRooms(c gin.Context) {
-// 	id, _ := c.Cookie("id")
-// 	idInt, _ := strconv.Atoi(id)
-// }
