@@ -3,6 +3,7 @@ package main
 import (
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
@@ -41,11 +42,13 @@ func Chat(w http.ResponseWriter, r *http.Request, id int) {
 
 	for {
 		var msg struct {
-			Message string `json:"message"`
-			Api     string `json:"api"`
-			Access  bool   `json:"access"`
-			Target  int    `json:"target"`
-			User    int    `json:"user"`
+			Text       string `json:"text"`
+			Api        string `json:"api"`
+			Access     bool   `json:"access"`
+			Typing     bool   `json:"typing"`
+			Target     int    `json:"target"`
+			User       int    `json:"user"`
+			Created_at int64  `json:"created_at"`
 		}
 
 		err := con.ReadJSON(&msg)
@@ -54,10 +57,16 @@ func Chat(w http.ResponseWriter, r *http.Request, id int) {
 		}
 
 		if _, exist := clients[msg.Target]; exist {
-			switch msg.Api {
-			case "access":
-				clients[msg.Target].WriteJSON(msg)
-			}
+			clients[msg.Target].WriteJSON(msg)
+		}
+
+		switch msg.Api {
+		case "message":
+			writeMessage(msg.Text, msg.User, msg.Target, msg.Created_at)
+			break
+		case "view":
+			viewMessages(msg.User, msg.Target)
+			break
 		}
 	}
 }
@@ -76,6 +85,23 @@ func quit(id int) {
 	}
 
 	delete(clients, id) // Удаляем соединение
+}
+
+func writeMessage(text string, user, target int, created_at int64) {
+	trimmed := strings.TrimSpace(text)
+	DB["messages"].InsertOne(ctx, bson.D{
+		{Key: "user", Value: user},
+		{Key: "target", Value: target},
+		{Key: "viewed", Value: false},
+		{Key: "text", Value: trimmed},
+		{Key: "created_at", Value: created_at},
+	})
+}
+
+func viewMessages(user, target int) {
+	DB["messages"].UpdateMany(ctx, bson.M{"user": target, "target": user}, bson.D{
+		{Key: "$set", Value: bson.D{{Key: "viewed", Value: true}}},
+	})
 }
 
 // func GetRooms(c gin.Context) {
