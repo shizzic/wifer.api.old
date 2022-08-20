@@ -29,7 +29,10 @@ var upgrader = websocket.Upgrader{
 var clients = make(map[int]*websocket.Conn)
 var rooms = make(map[int]map[int]bool)
 
-func Chat(w http.ResponseWriter, r *http.Request, id int) {
+func Chat(w http.ResponseWriter, r *http.Request, c gin.Context) {
+	idCookie, _ := c.Cookie("id")
+	id, _ := strconv.Atoi(idCookie)
+
 	con, _ := upgrader.Upgrade(w, r, nil)
 	defer con.Close() // Закрываем соединение
 	if _, exist := clients[id]; exist {
@@ -66,6 +69,13 @@ func Chat(w http.ResponseWriter, r *http.Request, id int) {
 			break
 		case "view":
 			viewMessages(msg.User, msg.Target)
+			break
+		case "access":
+			if msg.Access {
+				AddAccess(msg.Target, c)
+			} else {
+				DeleteAccess(msg.Target, c)
+			}
 			break
 		}
 	}

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"strconv"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -216,9 +215,7 @@ func main() {
 	})
 
 	r.GET("/chat", Auth(), func(c *gin.Context) {
-		id, _ := c.Cookie("id")
-		idInt, _ := strconv.Atoi(id)
-		Chat(c.Writer, c.Request, idInt)
+		Chat(c.Writer, c.Request, *c)
 	})
 
 	r.GET("/getRooms", Auth(), func(c *gin.Context) {
