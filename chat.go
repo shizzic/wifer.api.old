@@ -9,6 +9,7 @@ import (
 	"github.com/gorilla/websocket"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
@@ -16,6 +17,10 @@ type messages struct {
 	Target int   `form:"target"`
 	Skip   int64 `form:"skip"`
 	Access bool  `form:"access"`
+}
+
+type rooms struct {
+	Nin []int `form:"nin"`
 }
 
 var upgrader = websocket.Upgrader{
@@ -27,7 +32,6 @@ var upgrader = websocket.Upgrader{
 }
 
 var clients = make(map[int]*websocket.Conn)
-var rooms = make(map[int]map[int]bool)
 
 func Chat(w http.ResponseWriter, r *http.Request, c gin.Context) {
 	idCookie, _ := c.Cookie("id")
@@ -40,17 +44,16 @@ func Chat(w http.ResponseWriter, r *http.Request, c gin.Context) {
 		delete(clients, id)
 	}
 	clients[id] = con
-	enter(id)
 	defer quit(id)
 
 	for {
 		var msg struct {
-			Text       string `json:"text"`
 			Api        string `json:"api"`
+			Text       string `json:"text"`
+			User       int    `json:"user"`
+			Target     int    `json:"target"`
 			Access     bool   `json:"access"`
 			Typing     bool   `json:"typing"`
-			Target     int    `json:"target"`
-			User       int    `json:"user"`
 			Created_at int64  `json:"created_at"`
 		}
 
@@ -81,43 +84,60 @@ func Chat(w http.ResponseWriter, r *http.Request, c gin.Context) {
 	}
 }
 
-// User enters socket
-func enter(id int) {
-	rooms[id] = make(map[int]bool)
-}
+func GetRooms(data rooms, c gin.Context) (map[string][]bson.M, []int) {
+	var res = make(map[string][]bson.M)
+	id, _ := c.Cookie("id")
+	idInt, _ := strconv.Atoi(id)
+	var rooms []bson.M
+	var ids []int
+	var users []bson.M
 
-// User left socket for whatever reason
-func quit(id int) {
-	for client := range rooms[id] {
-		if _, exist := rooms[client]; exist {
-			delete(rooms[client], id)
+	matchFilter := bson.D{{Key: "$match",
+		Value: bson.D{{
+			Key: "roommates", Value: bson.D{
+				{Key: "$in", Value: []int{idInt}},
+				{Key: "$nin", Value: data.Nin},
+			},
+		}},
+	}}
+
+	groupFilter := bson.D{{Key: "$group",
+		Value: bson.D{
+			{Key: "_id", Value: "$roommates"},
+			{Key: "user", Value: bson.D{{Key: "$first", Value: "$user"}}},
+			{Key: "target", Value: bson.D{{Key: "$first", Value: "$target"}}},
+			{Key: "text", Value: bson.D{{Key: "$first", Value: "$text"}}},
+			{Key: "created_at", Value: bson.D{{Key: "$first", Value: "$created_at"}}},
+			{Key: "viewed", Value: bson.D{{Key: "$first", Value: "$viewed"}}},
+		},
+	}}
+
+	sortFilter := bson.D{{Key: "$sort", Value: bson.D{{Key: "created_at", Value: -1}}}}
+	limitFilter := bson.D{{Key: "$limit", Value: 25}}
+
+	cursor, _ := DB["messages"].Aggregate(ctx, mongo.Pipeline{matchFilter, sortFilter, limitFilter, groupFilter, sortFilter})
+	cursor.All(ctx, &rooms)
+	res["rooms"] = rooms
+
+	for _, v := range rooms {
+		user := int(v["user"].(int32))
+
+		if user != idInt {
+			ids = append(ids, user)
+			continue
 		}
+
+		ids = append(ids, int(v["target"].(int32)))
 	}
 
-	delete(clients, id) // Удаляем соединение
-}
+	opts := options.Find().SetProjection(bson.M{"username": 1, "avatar": 1, "online": 1})
+	cur, _ := DB["users"].Find(ctx, bson.M{"_id": bson.M{"$in": ids}, "status": true}, opts)
+	cur.All(ctx, &users)
 
-func writeMessage(text string, user, target int, created_at int64) {
-	trimmed := strings.TrimSpace(text)
-	DB["messages"].InsertOne(ctx, bson.D{
-		{Key: "user", Value: user},
-		{Key: "target", Value: target},
-		{Key: "viewed", Value: false},
-		{Key: "text", Value: trimmed},
-		{Key: "created_at", Value: created_at},
-	})
-}
+	res["users"] = users
 
-func viewMessages(user, target int) {
-	DB["messages"].UpdateMany(ctx, bson.M{"user": target, "target": user}, bson.D{
-		{Key: "$set", Value: bson.D{{Key: "viewed", Value: true}}},
-	})
+	return res, ids
 }
-
-// func GetRooms(c gin.Context) {
-// 	id, _ := c.Cookie("id")
-// 	idInt, _ := strconv.Atoi(id)
-// }
 
 func GetMessages(data messages, c gin.Context) map[string][]bson.M {
 	var res = make(map[string][]bson.M)
@@ -169,4 +189,35 @@ func CheckRoomAccess(id, target int, filter primitive.M) []bson.M {
 	cursor, _ := DB["access"].Find(ctx, filter, opts)
 	cursor.All(ctx, &accesses)
 	return accesses
+}
+
+func writeMessage(text string, user, target int, created_at int64) {
+	trimmed := strings.TrimSpace(text)
+	var roommates []int
+
+	if user > target {
+		roommates = []int{target, user}
+	} else {
+		roommates = []int{user, target}
+	}
+
+	DB["messages"].InsertOne(ctx, bson.D{
+		{Key: "roommates", Value: roommates},
+		{Key: "user", Value: user},
+		{Key: "target", Value: target},
+		{Key: "viewed", Value: false},
+		{Key: "text", Value: trimmed},
+		{Key: "created_at", Value: created_at},
+	})
+}
+
+func viewMessages(user, target int) {
+	DB["messages"].UpdateMany(ctx, bson.M{"user": target, "target": user}, bson.D{
+		{Key: "$set", Value: bson.D{{Key: "viewed", Value: true}}},
+	})
+}
+
+// User left socket for whatever reason
+func quit(id int) {
+	delete(clients, id) // Удаляем соединение
 }

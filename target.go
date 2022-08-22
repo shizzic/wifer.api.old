@@ -467,9 +467,9 @@ func GetAccesses(id int, data target) (int, map[string][]bson.M) {
 	}
 
 	opts2 := options.Find().SetProjection(bson.M{"username": 1, "title": 1, "age": 1, "weight": 1, "height": 1, "body": 1, "ethnicity": 1, "public": 1, "private": 1, "avatar": 1, "premium": 1, "country_id": 1, "city_id": 1, "online": 1, "is_about": 1})
-
 	cur, _ := DB["users"].Find(ctx, bson.M{"_id": bson.M{"$in": ids}, "status": true}, opts2)
 	cur.All(ctx, &list)
+
 	res["users"] = list
 	res["targets"] = targets
 

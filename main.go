@@ -218,8 +218,16 @@ func main() {
 		Chat(c.Writer, c.Request, *c)
 	})
 
-	r.GET("/getRooms", Auth(), func(c *gin.Context) {
-		// GetRooms(*c)
+	r.POST("/getRooms", Auth(), func(c *gin.Context) {
+		var data rooms
+		c.BindJSON(&data)
+
+		res, ids := GetRooms(data, *c)
+		c.JSON(200, gin.H{
+			"rooms": res["rooms"],
+			"users": res["users"],
+			"ids":   ids,
+		})
 	})
 
 	r.GET("/getMessages", Auth(), func(c *gin.Context) {
