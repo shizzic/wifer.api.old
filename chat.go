@@ -50,10 +50,12 @@ func Chat(w http.ResponseWriter, r *http.Request, c gin.Context) {
 		var msg struct {
 			Api        string `json:"api"`
 			Text       string `json:"text"`
+			Username   string `json:"username"`
 			User       int    `json:"user"`
 			Target     int    `json:"target"`
 			Access     bool   `json:"access"`
 			Typing     bool   `json:"typing"`
+			Avatar     bool   `json:"avatar"`
 			Created_at int64  `json:"created_at"`
 		}
 
@@ -89,7 +91,7 @@ func GetRooms(data rooms, c gin.Context) (map[string][]bson.M, []int) {
 	id, _ := c.Cookie("id")
 	idInt, _ := strconv.Atoi(id)
 	var rooms []bson.M
-	var ids []int
+	var ids = []int{}
 	var users []bson.M
 
 	matchFilter := bson.D{{Key: "$match",
@@ -115,7 +117,7 @@ func GetRooms(data rooms, c gin.Context) (map[string][]bson.M, []int) {
 	sortFilter := bson.D{{Key: "$sort", Value: bson.D{{Key: "created_at", Value: -1}}}}
 	limitFilter := bson.D{{Key: "$limit", Value: 25}}
 
-	cursor, _ := DB["messages"].Aggregate(ctx, mongo.Pipeline{matchFilter, sortFilter, limitFilter, groupFilter, sortFilter})
+	cursor, _ := DB["messages"].Aggregate(ctx, mongo.Pipeline{matchFilter, sortFilter, groupFilter, sortFilter, limitFilter})
 	cursor.All(ctx, &rooms)
 	res["rooms"] = rooms
 
@@ -130,9 +132,11 @@ func GetRooms(data rooms, c gin.Context) (map[string][]bson.M, []int) {
 		ids = append(ids, int(v["target"].(int32)))
 	}
 
-	opts := options.Find().SetProjection(bson.M{"username": 1, "avatar": 1, "online": 1})
-	cur, _ := DB["users"].Find(ctx, bson.M{"_id": bson.M{"$in": ids}, "status": true}, opts)
-	cur.All(ctx, &users)
+	if len(ids) > 0 {
+		opts := options.Find().SetProjection(bson.M{"username": 1, "avatar": 1, "online": 1})
+		cur, _ := DB["users"].Find(ctx, bson.M{"_id": bson.M{"$in": ids}, "status": true}, opts)
+		cur.All(ctx, &users)
+	}
 
 	res["users"] = users
 
