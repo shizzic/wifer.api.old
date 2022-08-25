@@ -139,15 +139,17 @@ func GetNotifications(c gin.Context) map[string]int64 {
 
 // Add view of another user's profile
 func AddView(id, target int, c gin.Context) {
-	DB["views"].DeleteOne(ctx, bson.M{"user": id, "target": target})
+	if id > 0 && id != target && target > 0 {
+		DB["views"].DeleteOne(ctx, bson.M{"user": id, "target": target})
 
-	date := time.Now().Unix()
-	DB["views"].InsertOne(ctx, bson.D{
-		{Key: "user", Value: id},
-		{Key: "target", Value: target},
-		{Key: "viewed", Value: false},
-		{Key: "created_at", Value: date},
-	})
+		date := time.Now().Unix()
+		DB["views"].InsertOne(ctx, bson.D{
+			{Key: "user", Value: id},
+			{Key: "target", Value: target},
+			{Key: "viewed", Value: false},
+			{Key: "created_at", Value: date},
+		})
+	}
 }
 
 // User likes another user
@@ -156,6 +158,8 @@ func AddPrivate(target int, c gin.Context) {
 	idInt, _ := strconv.Atoi(id)
 
 	if idInt > 0 && idInt != target && target > 0 {
+		DB["private"].DeleteOne(ctx, bson.M{"user": id, "target": target})
+
 		date := time.Now().Unix()
 		DB["private"].InsertOne(ctx, bson.D{
 			{Key: "user", Value: idInt},
@@ -172,6 +176,8 @@ func AddAccess(target int, c gin.Context) {
 	idInt, _ := strconv.Atoi(id)
 
 	if idInt > 0 && idInt != target && target > 0 {
+		DB["access"].DeleteOne(ctx, bson.M{"user": id, "target": target})
+
 		date := time.Now().Unix()
 		DB["access"].InsertOne(ctx, bson.D{
 			{Key: "user", Value: idInt},
