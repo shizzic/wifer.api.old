@@ -230,6 +230,14 @@ func main() {
 		})
 	})
 
+	r.POST("/checkOnlineInChat", Auth(), func(c *gin.Context) {
+		var data rooms
+		c.BindJSON(&data)
+
+		users := CheckOnlineInChat(data)
+		c.JSON(200, users)
+	})
+
 	r.GET("/getMessages", Auth(), func(c *gin.Context) {
 		var data messages
 		c.Bind(&data)

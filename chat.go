@@ -20,7 +20,9 @@ type messages struct {
 }
 
 type rooms struct {
-	Nin []int `form:"nin"`
+	Nin        []int  `form:"nin"`
+	Username   string `form:"username"`
+	ByUsername bool   `form:"byUsername"`
 }
 
 var upgrader = websocket.Upgrader{
@@ -94,15 +96,6 @@ func GetRooms(data rooms, c gin.Context) (map[string][]bson.M, []int) {
 	var ids = []int{}
 	var users []bson.M
 
-	matchFilter := bson.D{{Key: "$match",
-		Value: bson.D{{
-			Key: "roommates", Value: bson.D{
-				{Key: "$in", Value: []int{idInt}},
-				{Key: "$nin", Value: data.Nin},
-			},
-		}},
-	}}
-
 	groupFilter := bson.D{{Key: "$group",
 		Value: bson.D{
 			{Key: "_id", Value: "$roommates"},
@@ -117,27 +110,63 @@ func GetRooms(data rooms, c gin.Context) (map[string][]bson.M, []int) {
 	sortFilter := bson.D{{Key: "$sort", Value: bson.D{{Key: "created_at", Value: -1}}}}
 	limitFilter := bson.D{{Key: "$limit", Value: 25}}
 
-	cursor, _ := DB["messages"].Aggregate(ctx, mongo.Pipeline{matchFilter, sortFilter, groupFilter, sortFilter, limitFilter})
-	cursor.All(ctx, &rooms)
-	res["rooms"] = rooms
+	if !data.ByUsername {
+		matchFilter := bson.D{{Key: "$match",
+			Value: bson.D{{
+				Key: "roommates", Value: bson.D{
+					{Key: "$in", Value: []int{idInt}},
+					{Key: "$nin", Value: data.Nin},
+				},
+			}},
+		}}
 
-	for _, v := range rooms {
-		user := int(v["user"].(int32))
+		cursor, _ := DB["messages"].Aggregate(ctx, mongo.Pipeline{matchFilter, sortFilter, groupFilter, sortFilter, limitFilter})
+		cursor.All(ctx, &rooms)
 
-		if user != idInt {
-			ids = append(ids, user)
-			continue
+		for _, v := range rooms {
+			user := int(v["user"].(int32))
+
+			if user != idInt {
+				ids = append(ids, user)
+				continue
+			}
+
+			ids = append(ids, int(v["target"].(int32)))
 		}
 
-		ids = append(ids, int(v["target"].(int32)))
-	}
-
-	if len(ids) > 0 {
+		if len(ids) > 0 {
+			opts := options.Find().SetProjection(bson.M{"username": 1, "avatar": 1, "online": 1})
+			cur, _ := DB["users"].Find(ctx, bson.M{"_id": bson.M{"$in": ids}, "status": true}, opts)
+			cur.All(ctx, &users)
+		}
+	} else {
+		nin := data.Nin
+		nin = append(nin, idInt)
 		opts := options.Find().SetProjection(bson.M{"username": 1, "avatar": 1, "online": 1})
-		cur, _ := DB["users"].Find(ctx, bson.M{"_id": bson.M{"$in": ids}, "status": true}, opts)
+		cur, _ := DB["users"].Find(ctx, bson.M{"username": bson.M{"$regex": data.Username, "$options": "i"}, "_id": bson.M{"$nin": nin}, "status": true}, opts)
 		cur.All(ctx, &users)
+
+		for _, v := range users {
+			ids = append(ids, int(v["_id"].(int32)))
+		}
+
+		if len(ids) > 0 {
+			freshIds := ids
+			freshIds = append(freshIds, idInt)
+
+			matchFilter := bson.D{{Key: "$match",
+				Value: bson.D{
+					{Key: "user", Value: bson.D{{Key: "$in", Value: freshIds}}},
+					{Key: "target", Value: bson.D{{Key: "$in", Value: freshIds}}},
+				},
+			}}
+
+			cursor, _ := DB["messages"].Aggregate(ctx, mongo.Pipeline{matchFilter, sortFilter, groupFilter, sortFilter, limitFilter})
+			cursor.All(ctx, &rooms)
+		}
 	}
 
+	res["rooms"] = rooms
 	res["users"] = users
 
 	return res, ids
@@ -185,6 +214,14 @@ func GetMessages(data messages, c gin.Context) map[string][]bson.M {
 	}
 
 	return res
+}
+
+func CheckOnlineInChat(data rooms) []bson.M {
+	var users []bson.M
+	opts := options.Find().SetProjection(bson.M{"online": 1})
+	cur, _ := DB["users"].Find(ctx, bson.M{"_id": bson.M{"$in": data.Nin}, "status": true}, opts)
+	cur.All(ctx, &users)
+	return users
 }
 
 func CheckRoomAccess(id, target int, filter primitive.M) []bson.M {
