@@ -56,7 +56,7 @@ func main() {
 		}
 	})
 
-	r.POST("/online", Auth(), func(c *gin.Context) {
+	r.GET("/online", Auth(), func(c *gin.Context) {
 		var data user
 		c.Bind(&data)
 

@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
@@ -29,23 +30,34 @@ var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
 	CheckOrigin: func(r *http.Request) bool {
-		return true
+		origin := r.Header.Get("Origin")
+		return origin == domainClient
 	},
 }
 
-var clients = make(map[int]*websocket.Conn)
+// var clients = make(map[int]*websocket.Conn)
+var clients sync.Map
 
 func Chat(w http.ResponseWriter, r *http.Request, c gin.Context) {
 	idCookie, _ := c.Cookie("id")
 	id, _ := strconv.Atoi(idCookie)
 
 	con, _ := upgrader.Upgrade(w, r, nil)
+	// defer con.Close() // Закрываем соединение
+	// if _, exist := clients[id]; exist {
+	// 	clients[id].Close()
+	// 	delete(clients, id)
+	// }
+	// clients[id] = con
+	// defer quit(id)
+
 	defer con.Close() // Закрываем соединение
-	if _, exist := clients[id]; exist {
-		clients[id].Close()
-		delete(clients, id)
+	if v, exist := clients.Load(id); exist {
+		c := v.(*websocket.Conn)
+		clients.Delete(id)
+		c.Close()
 	}
-	clients[id] = con
+	clients.Store(id, con)
 	defer quit(id)
 
 	for {
@@ -66,8 +78,9 @@ func Chat(w http.ResponseWriter, r *http.Request, c gin.Context) {
 			break
 		}
 
-		if _, exist := clients[msg.Target]; exist {
-			clients[msg.Target].WriteJSON(msg)
+		if v, exist := clients.Load(msg.Target); exist {
+			c := v.(*websocket.Conn)
+			c.WriteJSON(msg)
 		}
 
 		switch msg.Api {
@@ -143,7 +156,7 @@ func GetRooms(data rooms, c gin.Context) (map[string][]bson.M, []int) {
 		nin := data.Nin
 		nin = append(nin, idInt)
 		opts := options.Find().SetProjection(bson.M{"username": 1, "avatar": 1, "online": 1})
-		cur, _ := DB["users"].Find(ctx, bson.M{"username": bson.M{"$regex": data.Username, "$options": "i"}, "_id": bson.M{"$nin": nin}, "status": true}, opts)
+		cur, _ := DB["users"].Find(ctx, bson.M{"username": bson.M{"$regex": data.Username, "$options": "gi"}, "_id": bson.M{"$nin": nin}, "status": true}, opts)
 		cur.All(ctx, &users)
 
 		for _, v := range users {
@@ -260,5 +273,5 @@ func viewMessages(user, target int) {
 
 // User left socket for whatever reason
 func quit(id int) {
-	delete(clients, id) // Удаляем соединение
+	clients.Delete(id)
 }
