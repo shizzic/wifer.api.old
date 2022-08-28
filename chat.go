@@ -117,6 +117,22 @@ func GetRooms(data rooms, c gin.Context) (map[string][]bson.M, []int) {
 			{Key: "text", Value: bson.D{{Key: "$first", Value: "$text"}}},
 			{Key: "created_at", Value: bson.D{{Key: "$first", Value: "$created_at"}}},
 			{Key: "viewed", Value: bson.D{{Key: "$first", Value: "$viewed"}}},
+			{Key: "news", Value: bson.D{{Key: "$sum", Value: bson.D{{
+				Key: "$cond", Value: bson.D{
+					{Key: "if", Value: bson.D{
+						{Key: "$and", Value: []bson.D{
+							{
+								{Key: "$eq", Value: []interface{}{"$viewed", false}},
+							},
+							{
+								{Key: "$eq", Value: []interface{}{"$target", idInt}},
+							},
+						}},
+					}},
+					{Key: "then", Value: 1},
+					{Key: "else", Value: 0},
+				},
+			}}}}},
 		},
 	}}
 

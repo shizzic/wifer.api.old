@@ -189,7 +189,7 @@ func DeactivateAccount(c gin.Context) {
 	MakeCookies("", "", -1, c)
 }
 
-func CheckAvatar(c gin.Context) bson.M {
+func GetParamsAfterLogin(c gin.Context) (bson.M, []interface{}) {
 	id, _ := c.Cookie("id")
 	idInt, _ := strconv.Atoi(id)
 
@@ -197,13 +197,7 @@ func CheckAvatar(c gin.Context) bson.M {
 	opts := options.FindOne().SetProjection(bson.M{"_id": 0, "username": 1, "avatar": 1})
 	DB["users"].FindOne(ctx, bson.M{"_id": idInt}, opts).Decode(&user)
 
-	return user
-}
-
-func checkMessages(c gin.Context) []interface{} {
-	id, _ := c.Cookie("id")
-	idInt, _ := strconv.Atoi(id)
-
 	newMessages, _ := DB["messages"].Distinct(ctx, "user", bson.M{"target": idInt, "viewed": false})
-	return newMessages
+
+	return user, newMessages
 }

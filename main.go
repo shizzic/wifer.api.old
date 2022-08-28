@@ -246,14 +246,12 @@ func main() {
 		c.JSON(200, res)
 	})
 
-	r.GET("/checkAvatar", Auth(), func(c *gin.Context) {
-		res := CheckAvatar(*c)
-		c.JSON(200, res)
-	})
-
-	r.GET("/checkMessages", Auth(), func(c *gin.Context) {
-		res := checkMessages(*c)
-		c.JSON(200, res)
+	r.GET("/getParamsAfterLogin", Auth(), func(c *gin.Context) {
+		user, messages := GetParamsAfterLogin(*c)
+		c.JSON(200, gin.H{
+			"user":     user,
+			"messages": messages,
+		})
 	})
 
 	run()
