@@ -23,17 +23,45 @@ type auth struct {
 // check if user loged in
 func Auth() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		if token, err := c.Cookie("token"); err == nil {
-			if username, e := c.Cookie("username"); e == nil {
-				if DecryptToken(token) == username {
-					c.Next()
-					return
-				}
+		if _, e := c.Cookie("auth"); e == nil {
+			c.Next()
+			return
+		} else {
+			token, err := c.Cookie("token")
+			username, e := c.Cookie("username")
+
+			if err == nil && e == nil && DecryptToken(token, c) == username {
+				c.Next()
+				return
 			}
 		}
 
 		c.AbortWithStatus(401)
 	}
+}
+
+// 30 ms speed average
+func DecryptToken(token string, c *gin.Context) (username string) {
+	key := 0
+	minus := 0
+
+	for i, char := range token {
+		if key == i {
+			if char%2 == 0 {
+				username += string(char - 1)
+			} else {
+				username += string(char + 1)
+			}
+
+			key += minus + 1
+			minus += 1
+		}
+	}
+
+	c.SetSameSite(net.SameSiteNoneMode)
+	c.SetCookie("auth", "auth", 1800, "/", "."+domainBack, true, true)
+
+	return
 }
 
 func EncryptToken(username string) (token string) {
@@ -52,27 +80,6 @@ func EncryptToken(username string) (token string) {
 		}
 
 		token += string(b)
-	}
-
-	return
-}
-
-// 30 ms speed average
-func DecryptToken(token string) (username string) {
-	key := 0
-	minus := 0
-
-	for i, char := range token {
-		if key == i {
-			if char%2 == 0 {
-				username += string(char - 1)
-			} else {
-				username += string(char + 1)
-			}
-
-			key += minus + 1
-			minus += 1
-		}
 	}
 
 	return

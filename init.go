@@ -69,7 +69,7 @@ func redirect() gin.HandlerFunc {
 
 func CORSMiddleware() gin.HandlerFunc {
 	return cors.New(cors.Config{
-		AllowOrigins:     []string{domainClient, "http://192.168.1.106:8080"},
+		AllowOrigins:     []string{domainClient, "http://192.168.1.106:8080", "http://192.168.0.119:8080"},
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"},
 		AllowHeaders:     []string{"Content-Type", "Content-Length", "Accept-Encoding", "X-CSRF-Token", "Authorization", "accept", "origin", "Cache-Control", "X-Requested-With", "Access-Control-Max-Age"},
 		AllowCredentials: true,
