@@ -254,5 +254,15 @@ func main() {
 		})
 	})
 
+	r.GET("/count", func(c *gin.Context) {
+		quantity := CountAll()
+		c.JSON(200, quantity)
+	})
+
+	r.POST("/contact", func(c *gin.Context) {
+		err := ContactMe(c.PostForm("name"), c.PostForm("email"), c.PostForm("subject"), c.PostForm("message"))
+		c.JSON(200, err)
+	})
+
 	run()
 }

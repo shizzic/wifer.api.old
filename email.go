@@ -23,3 +23,19 @@ func SendCode(to, code, id string) error {
 
 	return nil
 }
+
+func ContactMe(name, email, subject, message string) error {
+	m := gomail.NewMessage()
+	m.SetHeader("From", "Wifer <admin@"+domainBack+">")
+	m.SetHeader("To", "kotcich@gmail.com")
+	m.SetHeader("Subject", subject)
+	m.SetBody("text/html", "<p>name: "+name+" - email: "+email+"</p>"+message)
+	d := gomail.NewDialer("skvmrelay.netangels.ru", 25, "admin@"+domainBack, emailPass)
+	d.TLSConfig = &tls.Config{InsecureSkipVerify: true}
+
+	if err := d.DialAndSend(m); err != nil {
+		return err
+	}
+
+	return nil
+}

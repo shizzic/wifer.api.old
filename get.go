@@ -222,3 +222,13 @@ func PrepareFilter(data List) bson.M {
 
 	return filter
 }
+
+func CountAll() int64 {
+	count, err := DB["users"].CountDocuments(ctx, bson.M{"status": true})
+
+	if err != nil {
+		return 0
+	} else {
+		return count
+	}
+}
