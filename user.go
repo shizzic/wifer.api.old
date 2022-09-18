@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	net "net/http"
 	"strconv"
 	"strings"
 	"time"
@@ -35,7 +36,7 @@ type user struct {
 	Children   int    `form:"children"`
 	Industry   int    `form:"industry"`
 	Online     bool   `form:"online"`
-	Premium    int    `json:"premium"`
+	Premium    int64  `json:"premium"`
 }
 
 func Change(data user, c gin.Context) error {
@@ -173,6 +174,8 @@ func Logout(c gin.Context) {
 	})
 
 	MakeCookies("", "", -1, c)
+	c.SetSameSite(net.SameSiteNoneMode)
+	c.SetCookie("premium", "premium", -1, "/", "."+domainBack, true, true)
 }
 
 // Set active filed to false and handle user's content
@@ -187,6 +190,8 @@ func DeactivateAccount(c gin.Context) {
 	})
 
 	MakeCookies("", "", -1, c)
+	c.SetSameSite(net.SameSiteNoneMode)
+	c.SetCookie("premium", "premium", -1, "/", "."+domainBack, true, true)
 }
 
 func GetParamsAfterLogin(c gin.Context) (bson.M, []interface{}) {
@@ -194,10 +199,85 @@ func GetParamsAfterLogin(c gin.Context) (bson.M, []interface{}) {
 	idInt, _ := strconv.Atoi(id)
 
 	var user bson.M
-	opts := options.FindOne().SetProjection(bson.M{"_id": 0, "username": 1, "avatar": 1})
+	opts := options.FindOne().SetProjection(bson.M{"_id": 0, "username": 1, "avatar": 1, "trial": 1, "premium": 1})
 	DB["users"].FindOne(ctx, bson.M{"_id": idInt}, opts).Decode(&user)
+
+	if user["premium"].(int64) != 0 {
+		if user["premium"].(int64) <= time.Now().Unix() {
+			DB["users"].UpdateOne(ctx, bson.M{"_id": idInt}, bson.D{
+				{Key: "$set", Value: bson.D{{Key: "premium", Value: 0}}},
+			})
+
+			user["premium"] = 0
+
+			c.SetSameSite(net.SameSiteNoneMode)
+			c.SetCookie("premium", "premium", -1, "/", "."+domainBack, true, true)
+		} else {
+			if _, err := c.Cookie("premium"); err != nil {
+				c.SetSameSite(net.SameSiteNoneMode)
+				c.SetCookie("premium", "premium", int(user["premium"].(int64)-time.Now().Unix()), "/", "."+domainBack, true, true)
+			}
+		}
+	}
 
 	newMessages, _ := DB["messages"].Distinct(ctx, "user", bson.M{"target": idInt, "viewed": false})
 
 	return user, newMessages
+}
+
+func TriggerTrial(c gin.Context) (int64, error) {
+	id, _ := c.Cookie("id")
+	idInt, _ := strconv.Atoi(id)
+
+	var user bson.M
+	opts := options.FindOne().SetProjection(bson.M{"_id": 0, "trial": 1, "premium": 1})
+	DB["users"].FindOne(ctx, bson.M{"_id": idInt}, opts).Decode(&user)
+
+	if !user["trial"].(bool) {
+		expires := time.Now().Unix() + (1 * 60 * 60 * 24 * 7)
+
+		if user["premium"].(int64) == 0 {
+			DB["users"].UpdateOne(ctx, bson.M{"_id": idInt}, bson.D{
+				{Key: "$set", Value: bson.D{{Key: "trial", Value: true}}},
+				{Key: "$set", Value: bson.D{{Key: "premium", Value: expires}}},
+			})
+
+			c.SetSameSite(net.SameSiteNoneMode)
+			c.SetCookie("premium", "premium", 1*60*60*24*7, "/", "."+domainBack, true, true)
+
+			return expires, nil
+		} else {
+			DB["users"].UpdateOne(ctx, bson.M{"_id": idInt}, bson.D{
+				{Key: "$set", Value: bson.D{{Key: "trial", Value: true}}},
+				{Key: "$set", Value: bson.D{{Key: "premium", Value: user["premium"].(int64) + (1 * 60 * 60 * 24 * 7)}}},
+			})
+
+			c.SetSameSite(net.SameSiteNoneMode)
+			c.SetCookie("premium", "premium", int(user["premium"].(int64)-time.Now().Unix()+(1*60*60*24*7)), "/", "."+domainBack, true, true)
+		}
+	}
+
+	return 0, errors.New("0")
+}
+
+func CheckPremium(c gin.Context) bool {
+	id, _ := c.Cookie("id")
+	idInt, _ := strconv.Atoi(id)
+
+	var user bson.M
+	opts := options.FindOne().SetProjection(bson.M{"_id": 0, "premium": 1})
+	DB["users"].FindOne(ctx, bson.M{"_id": idInt}, opts).Decode(&user)
+
+	if user["premium"].(int64) < time.Now().Unix() {
+		DB["users"].UpdateOne(ctx, bson.M{"_id": idInt}, bson.D{
+			{Key: "$set", Value: bson.D{{Key: "premium", Value: 0}}},
+		})
+
+		c.SetSameSite(net.SameSiteNoneMode)
+		c.SetCookie("premium", "premium", -1, "/", "."+domainBack, true, true)
+
+		return false
+	}
+
+	return true
 }

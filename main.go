@@ -264,5 +264,18 @@ func main() {
 		c.JSON(200, err)
 	})
 
+	r.PUT("/trial", Auth(), func(c *gin.Context) {
+		expires, err := TriggerTrial(*c)
+		c.JSON(200, gin.H{
+			"err":     err,
+			"expires": expires,
+		})
+	})
+
+	r.GET("/checkPremium", Auth(), func(c *gin.Context) {
+		left := CheckPremium(*c)
+		c.JSON(200, left)
+	})
+
 	run()
 }

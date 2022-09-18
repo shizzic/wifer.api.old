@@ -13,6 +13,8 @@ import (
 )
 
 var serverID string = "213.189.217.231"
+
+// var domainClient string = "https://luckriza.com"
 var domainClient string = "http://localhost:8080"
 var domainBack string = "wifer-test.ru"
 var emailPass string = "jukdNRaVWf3Fvmg"
