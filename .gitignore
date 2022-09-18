@@ -2,4 +2,6 @@ idea/
 wifer-test
 /backup/backup
 /imgBackup/imgBackup
+/deactivate/deactivate
+/premium/premium
 .git/
