@@ -16,7 +16,7 @@ func main() {
 // Make comprasion of database to gzip file
 func ZipImages() {
 	files, _ := archiver.FilesFromDisk(nil, map[string]string{
-		"/var/www/html": "Images",
+		"/var/www/images": "Images",
 	})
 	out, _ := os.Create("/var/www/default/site/images.tar.gz")
 	defer out.Close()
