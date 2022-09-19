@@ -19,7 +19,7 @@ func UploadImage(dir string, c gin.Context) error {
 	if file.Size < 20000001 {
 		isAvatar := 0
 		id, _ := c.Cookie("id")
-		path := "/var/www/html/" + id
+		path := "/var/www/images/" + id
 		os.MkdirAll(path+"/public", os.ModePerm)
 		os.MkdirAll(path+"/private", os.ModePerm)
 		_, avatar := os.Stat(path + "/avatar.webp")
@@ -60,7 +60,7 @@ func UploadImage(dir string, c gin.Context) error {
 func DeleteImage(isAvatar, dir, number string, c gin.Context) {
 	id, _ := c.Cookie("id")
 	idInt, _ := strconv.Atoi(id)
-	path := "/var/www/html/" + id
+	path := "/var/www/images/" + id
 
 	if isAvatar == "1" {
 		files, _ := os.ReadDir(path + "/public")
@@ -82,7 +82,7 @@ func DeleteImage(isAvatar, dir, number string, c gin.Context) {
 func ChangeImageDir(isAvatar, dir, new, number string, c gin.Context) {
 	id, _ := c.Cookie("id")
 	idInt, _ := strconv.Atoi(id)
-	path := "/var/www/html/" + id
+	path := "/var/www/images/" + id
 
 	if isAvatar == "1" {
 		private, _ := os.ReadDir(path + "/private")
@@ -128,7 +128,7 @@ func RenameImages(path, dir string, id int) {
 func ReplaceAvatar(dir, num string, c gin.Context) {
 	id, _ := c.Cookie("id")
 	idInt, _ := strconv.Atoi(id)
-	path := "/var/www/html/" + id
+	path := "/var/www/images/" + id
 	os.Rename(path+"/"+dir+"/"+num+".webp", path+"/new.webp")
 
 	if dir == "private" {
