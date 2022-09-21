@@ -13,9 +13,9 @@ import (
 )
 
 var serverID string = "213.189.217.231"
+var domainClient string = "https://luckriza.com"
 
-// var domainClient string = "https://luckriza.com"
-var domainClient string = "http://localhost:8080"
+// var domainClient string = "http://localhost:8080"
 var domainBack string = "wifer-test.ru"
 var emailPass string = "jukdNRaVWf3Fvmg"
 
@@ -61,7 +61,7 @@ func connect() *mongo.Client {
 func redirect() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if c.Request.Proto != "HTTP/2.0" {
-			c.Redirect(302, "https://"+domainBack+c.Request.URL.String())
+			c.Redirect(302, "https://"+domainBack+":450"+c.Request.URL.String())
 			return
 		}
 
@@ -71,7 +71,7 @@ func redirect() gin.HandlerFunc {
 
 func CORSMiddleware() gin.HandlerFunc {
 	return cors.New(cors.Config{
-		AllowOrigins:     []string{domainClient, "http://192.168.1.106:8080", "http://192.168.0.119:8080"},
+		AllowOrigins:     []string{domainClient},
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"},
 		AllowHeaders:     []string{"Content-Type", "Content-Length", "Accept-Encoding", "X-CSRF-Token", "Authorization", "accept", "origin", "Cache-Control", "X-Requested-With", "Access-Control-Max-Age"},
 		AllowCredentials: true,
@@ -90,8 +90,8 @@ func setHeaders() {
 
 // Run both: http and https servers
 func run() {
-	go r.RunTLS(serverID+":443", "/etc/ssl/wifer-test/__wifer-test_ru.full.crt", "/etc/ssl/wifer-test/__wifer-test_ru.key")
-	router.Run(serverID + ":80")
+	go r.RunTLS(serverID+":450", "/etc/ssl/luckriza/luckriza_com.full.crt", "/etc/ssl/luckriza/luckriza_com.key")
+	router.Run(serverID + ":449")
 }
 
 func clearOnline() {
