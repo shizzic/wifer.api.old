@@ -232,3 +232,13 @@ func CountAll() int64 {
 		return count
 	}
 }
+
+func Visit() {
+	var data bson.M
+	opts := options.FindOne().SetProjection(bson.M{"count": 1})
+	DB["visits"].FindOne(ctx, bson.M{"_id": 1}, opts).Decode(&data)
+
+	DB["visits"].UpdateOne(ctx, bson.M{"_id": 1}, bson.D{
+		{Key: "$set", Value: bson.D{{Key: "count", Value: data["count"].(int32) + 1}}},
+	})
+}

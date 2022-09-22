@@ -278,5 +278,9 @@ func main() {
 		c.JSON(200, left)
 	})
 
+	r.POST("/visit", func(c *gin.Context) {
+		Visit()
+	})
+
 	run()
 }
