@@ -13,6 +13,7 @@ func main() {
 	r.POST("/signin", func(c *gin.Context) {
 		var data signin
 		c.Bind(&data)
+
 		var err error
 		var id int
 

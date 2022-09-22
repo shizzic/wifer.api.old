@@ -90,7 +90,7 @@ func setHeaders() {
 
 // Run both: http and https servers
 func run() {
-	go r.RunTLS(serverID+":450", "/etc/ssl/luckriza/luckriza_com.full.crt", "/etc/ssl/luckriza/luckriza_com.key")
+	go r.RunTLS(serverID+":450", "/etc/ssl/wifer/__wifer-test_ru.full.crt", "/etc/ssl/wifer/__wifer-test_ru.key")
 	router.Run(serverID + ":449")
 }
 
