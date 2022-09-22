@@ -90,6 +90,7 @@ func setHeaders() {
 
 // Run both: http and https servers
 func run() {
+	gin.SetMode(gin.ReleaseMode)
 	go r.RunTLS(serverID+":450", "/etc/ssl/wifer/__wifer-test_ru.full.crt", "/etc/ssl/wifer/__wifer-test_ru.key")
 	router.Run(serverID + ":449")
 }
