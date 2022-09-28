@@ -62,7 +62,7 @@ func connect() *mongo.Client {
 func redirect() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if c.Request.Proto != "HTTP/2.0" {
-			c.Redirect(302, "https://"+domainBack+":450"+c.Request.URL.String())
+			c.Redirect(302, "https://"+domainBack+c.Request.URL.String())
 			return
 		}
 
@@ -92,8 +92,8 @@ func setHeaders() {
 // Run both: http and https servers
 func run() {
 	gin.SetMode(gin.ReleaseMode)
-	go r.RunTLS(serverID+":450", "/etc/ssl/wifer/__wifer-test_ru.full.crt", "/etc/ssl/wifer/__wifer-test_ru.key")
-	router.Run(serverID + ":449")
+	go r.RunTLS(serverID+":443", "/etc/ssl/wifer/__wifer-test_ru.full.crt", "/etc/ssl/wifer/__wifer-test_ru.key")
+	router.Run(serverID + ":80")
 }
 
 func clearOnline() {
