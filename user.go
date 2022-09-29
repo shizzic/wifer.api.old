@@ -234,7 +234,7 @@ func TriggerTrial(c gin.Context) (int64, error) {
 	DB["users"].FindOne(ctx, bson.M{"_id": idInt}, opts).Decode(&user)
 
 	if !user["trial"].(bool) {
-		expires := time.Now().Unix() + (1 * 60 * 60 * 24 * 7)
+		expires := time.Now().Unix() + int64(1*60*60*24*7)
 
 		if user["premium"].(int64) == 0 {
 			DB["users"].UpdateOne(ctx, bson.M{"_id": idInt}, bson.D{
@@ -249,7 +249,7 @@ func TriggerTrial(c gin.Context) (int64, error) {
 		} else {
 			DB["users"].UpdateOne(ctx, bson.M{"_id": idInt}, bson.D{
 				{Key: "$set", Value: bson.D{{Key: "trial", Value: true}}},
-				{Key: "$set", Value: bson.D{{Key: "premium", Value: user["premium"].(int64) + (1 * 60 * 60 * 24 * 7)}}},
+				{Key: "$set", Value: bson.D{{Key: "premium", Value: int64(user["premium"].(int64) + int64(1*60*60*24*7))}}},
 			})
 
 			c.SetSameSite(net.SameSiteNoneMode)
@@ -270,7 +270,7 @@ func CheckPremium(c gin.Context) bool {
 
 	if user["premium"].(int64) < time.Now().Unix() {
 		DB["users"].UpdateOne(ctx, bson.M{"_id": idInt}, bson.D{
-			{Key: "$set", Value: bson.D{{Key: "premium", Value: 0}}},
+			{Key: "$set", Value: bson.D{{Key: "premium", Value: int64(0)}}},
 		})
 
 		c.SetSameSite(net.SameSiteNoneMode)

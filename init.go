@@ -13,9 +13,10 @@ import (
 )
 
 var serverID string = "213.189.217.231"
-var domainClient string = "https://luckriza.com"
 
-// var domainClient string = "http://localhost:8080"
+// var domainClient string = "https://luckriza.com"
+
+var domainClient string = "http://localhost:8080"
 var domainBack string = "wifer-test.ru"
 var emailPass string = "jukdNRaVWf3Fvmg"
 
@@ -36,6 +37,7 @@ var DB = map[string]*mongo.Collection{
 	"access":    con.Database("wifer").Collection("access"),
 	"messages":  con.Database("wifer").Collection("messages"),
 	"visits":    con.Database("wifer").Collection("visits"),
+	"payments":  con.Database("wifer").Collection("payments"),
 }
 
 const mongoConnect string = "mongodb://shizzic:WebDev77@wifer-test.ru:27017/test?authSource=admin&readPreference=primary&appname=MongoDB%20Compass&directConnection=true&ssl=false"

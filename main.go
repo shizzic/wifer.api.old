@@ -282,5 +282,15 @@ func main() {
 		Visit()
 	})
 
+	r.POST("/checkPayment", Auth(), func(c *gin.Context) {
+		premium, err := CheckPayment(c.PostForm("orderID"), *c)
+
+		if err != nil {
+			c.JSON(200, gin.H{"error": err.Error()})
+		} else {
+			c.JSON(200, gin.H{"premium": premium})
+		}
+	})
+
 	run()
 }

@@ -20,7 +20,7 @@ var DB = map[string]*mongo.Collection{
 const mongoConnect string = "mongodb://shizzic:WebDev77@wifer-test.ru:27017/test?authSource=admin&readPreference=primary&appname=MongoDB%20Compass&directConnection=true&ssl=false"
 
 func main() {
-	DB["users"].UpdateMany(ctx, bson.M{"premium": bson.M{"$lt": time.Now().Unix()}}, bson.D{{Key: "$set", Value: bson.D{{Key: "premium", Value: 0}}}})
+	DB["users"].UpdateMany(ctx, bson.M{"premium": bson.M{"$lt": time.Now().Unix()}}, bson.D{{Key: "$set", Value: bson.D{{Key: "premium", Value: int64(0)}}}})
 }
 
 func connect() *mongo.Client {
