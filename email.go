@@ -2,36 +2,83 @@ package main
 
 import (
 	"crypto/tls"
+	"fmt"
+	"time"
 
-	"gopkg.in/gomail.v2"
+	"github.com/google/uuid"
+	mail "github.com/xhit/go-simple-mail/v2"
 )
 
 func SendCode(to, code, id string) error {
-	m := gomail.NewMessage()
-	m.SetHeader("From", "Wifer <admin@"+domainBack+">")
-	m.SetHeader("To", to)
-	m.SetHeader("Subject", "Confirm registration")
-	m.SetBody("text/html", "<p><h1>Here is a link to sign in into wifer :)</h1></p><p><a href=\""+domainClient+"/auth/"+id+"/"+code+"\">Enjoy</a></p>")
-	d := gomail.NewDialer("skvmrelay.netangels.ru", 25, "admin@"+domainBack, emailPass)
-	d.TLSConfig = &tls.Config{InsecureSkipVerify: true}
+	server := mail.NewSMTPClient()
+	server.Host = "skvmrelay.netangels.ru"
+	server.Port = 25
+	server.Username = "admin@" + domainBack
+	server.Password = emailPass
+	server.Encryption = mail.EncryptionSTARTTLS
+	server.KeepAlive = false
+	server.ConnectTimeout = 10 * time.Second
+	server.SendTimeout = 10 * time.Second
+	server.TLSConfig = &tls.Config{InsecureSkipVerify: true}
+	smtpClient, err := server.Connect()
 
-	if err := d.DialAndSend(m); err != nil {
+	if err != nil {
+		return err
+	}
+
+	email := mail.NewMSG()
+	email.SetFrom("luckriza <admin@" + domainBack + ">").
+		AddTo(to).
+		SetSubject("Confirm registration")
+
+	msgUUID, _ := uuid.NewRandom()
+	msgID := fmt.Sprintf("<%s@"+domainBack+">", msgUUID.String())
+	email.AddHeader("Message-ID", msgID)
+
+	fmt.Println(msgID)
+
+	email.SetBody(mail.TextHTML, "<p><h1>Here is a link to sign in into luckriza :)</h1></p><p><a href=\""+domainClient+"/auth/"+id+"/"+code+"\">Enjoy</a></p>")
+	err = email.Send(smtpClient)
+
+	if err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func ContactMe(name, email, subject, message string) error {
-	m := gomail.NewMessage()
-	m.SetHeader("From", "Wifer <admin@"+domainBack+">")
-	m.SetHeader("To", "kotcich@gmail.com")
-	m.SetHeader("Subject", subject)
-	m.SetBody("text/html", "<p>name: "+name+" - email: "+email+"</p>"+message)
-	d := gomail.NewDialer("skvmrelay.netangels.ru", 25, "admin@"+domainBack, emailPass)
-	d.TLSConfig = &tls.Config{InsecureSkipVerify: true}
+func ContactMe(name, sender, subject, message string) error {
+	server := mail.NewSMTPClient()
+	server.Host = "skvmrelay.netangels.ru"
+	server.Port = 25
+	server.Username = "admin@" + domainBack
+	server.Password = emailPass
+	server.Encryption = mail.EncryptionSTARTTLS
+	server.KeepAlive = false
+	server.ConnectTimeout = 10 * time.Second
+	server.SendTimeout = 10 * time.Second
+	server.TLSConfig = &tls.Config{InsecureSkipVerify: true}
+	smtpClient, err := server.Connect()
 
-	if err := d.DialAndSend(m); err != nil {
+	if err != nil {
+		return err
+	}
+
+	email := mail.NewMSG()
+	email.SetFrom("luckriza <admin@" + domainBack + ">").
+		AddTo("kotcich@gmail.com").
+		SetSubject(subject)
+
+	msgUUID, _ := uuid.NewRandom()
+	msgID := fmt.Sprintf("<%s@"+domainBack+">", msgUUID.String())
+	email.AddHeader("Message-ID", msgID)
+
+	fmt.Println(msgID)
+
+	email.SetBody(mail.TextHTML, "<p>name: "+name+" - email: "+sender+"</p>"+message)
+	err = email.Send(smtpClient)
+
+	if err != nil {
 		return err
 	}
 

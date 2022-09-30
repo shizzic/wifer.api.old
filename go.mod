@@ -6,13 +6,19 @@ require (
 	github.com/bas24/googletranslatefree v0.0.0-20220326200502-05ed9e639439
 	github.com/gin-contrib/cors v1.3.1
 	github.com/gin-gonic/gin v1.7.7
+	github.com/google/uuid v1.3.0
 	github.com/h2non/bimg v1.1.6
 	github.com/huandu/facebook/v2 v2.5.6
 	github.com/kothar/go-backblaze v0.0.0-20210124194846-35409b867216
 	github.com/mholt/archiver/v4 v4.0.0-alpha.6
+	github.com/xhit/go-simple-mail/v2 v2.12.0
 	go.mongodb.org/mongo-driver v1.8.1
 	google.golang.org/api v0.80.0
-	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
+)
+
+require (
+	github.com/go-test/deep v1.0.8 // indirect
+	github.com/toorop/go-dkim v0.0.0-20201103131630-e1cd1a0a5208 // indirect
 )
 
 require (
@@ -61,7 +67,6 @@ require (
 	google.golang.org/genproto v0.0.0-20220505152158-f39f71e6c8f3 // indirect
 	google.golang.org/grpc v1.46.0 // indirect
 	google.golang.org/protobuf v1.28.0 // indirect
-	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
 	gopkg.in/sourcemap.v1 v1.0.5 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
