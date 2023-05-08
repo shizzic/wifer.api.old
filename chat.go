@@ -31,14 +31,14 @@ var upgrader = websocket.Upgrader{
 	WriteBufferSize: 1024,
 	CheckOrigin: func(r *http.Request) bool {
 		origin := r.Header.Get("Origin")
-		return origin == domainClient
+		return origin == CLIENT_DOMAIN
 	},
 }
 
 // var clients = make(map[int]*websocket.Conn)
 var clients sync.Map
 
-func Chat(w http.ResponseWriter, r *http.Request, c gin.Context) {
+func Chat(w http.ResponseWriter, r *http.Request, c *gin.Context) {
 	idCookie, _ := c.Cookie("id")
 	id, _ := strconv.Atoi(idCookie)
 
@@ -86,22 +86,19 @@ func Chat(w http.ResponseWriter, r *http.Request, c gin.Context) {
 		switch msg.Api {
 		case "message":
 			writeMessage(msg.Text, msg.User, msg.Target, msg.Created_at)
-			break
 		case "view":
 			viewMessages(msg.User, msg.Target)
-			break
 		case "access":
 			if msg.Access {
 				AddAccess(msg.Target, c)
 			} else {
 				DeleteAccess(msg.Target, c)
 			}
-			break
 		}
 	}
 }
 
-func GetRooms(data rooms, c gin.Context) (map[string][]bson.M, []int) {
+func GetRooms(data rooms, c *gin.Context) (map[string][]bson.M, []int) {
 	var res = make(map[string][]bson.M)
 	id, _ := c.Cookie("id")
 	idInt, _ := strconv.Atoi(id)
@@ -201,7 +198,7 @@ func GetRooms(data rooms, c gin.Context) (map[string][]bson.M, []int) {
 	return res, ids
 }
 
-func GetMessages(data messages, c gin.Context) map[string][]bson.M {
+func GetMessages(data messages, c *gin.Context) map[string][]bson.M {
 	var res = make(map[string][]bson.M)
 	id, _ := c.Cookie("id")
 	idInt, _ := strconv.Atoi(id)

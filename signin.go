@@ -18,7 +18,7 @@ type signin struct {
 	Api    bool   `form:"api"`
 }
 
-func Signin(email string, c gin.Context, api bool) (int, error) {
+func Signin(email string, c *gin.Context, api bool) (int, error) {
 	if !IsEmailValid(email) {
 		return 0, errors.New("1")
 	}
@@ -126,7 +126,7 @@ func Signin(email string, c gin.Context, api bool) (int, error) {
 	return 0, nil
 }
 
-func CheckApi(data signin, c gin.Context) (int, error) {
+func CheckApi(data signin, c *gin.Context) (int, error) {
 	var email string
 	var err error = nil
 

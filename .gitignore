@@ -1,7 +1,9 @@
 idea/
-wifer-test
+dateshipper
+/images
 /backup/backup
 /imgBackup/imgBackup
 /deactivate/deactivate
 /premium/premium
 .git/
+.env

@@ -13,8 +13,8 @@ func SendCode(to, code, id string) error {
 	server := mail.NewSMTPClient()
 	server.Host = "skvmrelay.netangels.ru"
 	server.Port = 25
-	server.Username = "admin@" + domainBack
-	server.Password = emailPass
+	server.Username = "admin@" + SELF_DOMAIN_NAME
+	server.Password = EMAIL_PASSWORD
 	server.Encryption = mail.EncryptionSTARTTLS
 	server.KeepAlive = false
 	server.ConnectTimeout = 10 * time.Second
@@ -27,17 +27,17 @@ func SendCode(to, code, id string) error {
 	}
 
 	email := mail.NewMSG()
-	email.SetFrom("luckriza <admin@" + domainBack + ">").
+	email.SetFrom("luckriza <admin@" + SELF_DOMAIN_NAME + ">").
 		AddTo(to).
 		SetSubject("Confirm registration")
 
 	msgUUID, _ := uuid.NewRandom()
-	msgID := fmt.Sprintf("<%s@"+domainBack+">", msgUUID.String())
+	msgID := fmt.Sprintf("<%s@"+SELF_DOMAIN_NAME+">", msgUUID.String())
 	email.AddHeader("Message-ID", msgID)
 
 	fmt.Println(msgID)
 
-	email.SetBody(mail.TextHTML, "<p><h1>Here is a link to sign in into luckriza :)</h1></p><p><a href=\""+domainClient+"/auth/"+id+"/"+code+"\">Enjoy</a></p>")
+	email.SetBody(mail.TextHTML, "<p><h1>Here is a link to sign in into luckriza :)</h1></p><p><a href=\""+CLIENT_DOMAIN+"/auth/"+id+"/"+code+"\">Enjoy</a></p>")
 	err = email.Send(smtpClient)
 
 	if err != nil {
@@ -51,8 +51,8 @@ func ContactMe(name, sender, subject, message string) error {
 	server := mail.NewSMTPClient()
 	server.Host = "skvmrelay.netangels.ru"
 	server.Port = 25
-	server.Username = "admin@" + domainBack
-	server.Password = emailPass
+	server.Username = "admin@" + SELF_DOMAIN_NAME
+	server.Password = EMAIL_PASSWORD
 	server.Encryption = mail.EncryptionSTARTTLS
 	server.KeepAlive = false
 	server.ConnectTimeout = 10 * time.Second
@@ -65,12 +65,12 @@ func ContactMe(name, sender, subject, message string) error {
 	}
 
 	email := mail.NewMSG()
-	email.SetFrom("luckriza <admin@" + domainBack + ">").
+	email.SetFrom("luckriza <admin@" + SELF_DOMAIN_NAME + ">").
 		AddTo("kotcich@gmail.com").
 		SetSubject(subject)
 
 	msgUUID, _ := uuid.NewRandom()
-	msgID := fmt.Sprintf("<%s@"+domainBack+">", msgUUID.String())
+	msgID := fmt.Sprintf("<%s@"+SELF_DOMAIN_NAME+">", msgUUID.String())
 	email.AddHeader("Message-ID", msgID)
 
 	fmt.Println(msgID)

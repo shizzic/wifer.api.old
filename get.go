@@ -130,7 +130,7 @@ func GetCities(country_id int) []bson.M {
 	return data
 }
 
-func GetTemplates(c gin.Context) bson.M {
+func GetTemplates(c *gin.Context) bson.M {
 	id, _ := c.Cookie("id")
 	idInt, _ := strconv.Atoi(id)
 	var text bson.M
@@ -205,11 +205,11 @@ func PrepareFilter(data List) bson.M {
 		filter["city_id"] = bson.M{"$in": data.City}
 	}
 
-	if data.IsAbout == true {
+	if data.IsAbout {
 		filter["is_about"] = true
 	}
 
-	if data.Avatar == true {
+	if data.Avatar {
 		filter["avatar"] = true
 	}
 

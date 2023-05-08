@@ -3,9 +3,8 @@ package main
 import (
 	"encoding/json"
 	"errors"
-	"io/ioutil"
+	"io"
 	"net/http"
-	net "net/http"
 	"strconv"
 	"strings"
 	"time"
@@ -21,7 +20,7 @@ type PayPal struct {
 	Status      string `json:"status"`
 }
 
-func CheckPayment(orderID string, c gin.Context) (int64, error) {
+func CheckPayment(orderID string, c *gin.Context) (int64, error) {
 	_, err := DB["payments"].InsertOne(ctx, bson.D{{Key: "_id", Value: orderID}})
 
 	if err != nil {
@@ -45,7 +44,7 @@ func CheckPayment(orderID string, c gin.Context) (int64, error) {
 	return premium, nil
 }
 
-func updatePremium(c gin.Context) int64 {
+func updatePremium(c *gin.Context) int64 {
 	id, _ := c.Cookie("id")
 	idInt, _ := strconv.Atoi(id)
 
@@ -63,8 +62,8 @@ func updatePremium(c gin.Context) int64 {
 			{Key: "$set", Value: bson.D{{Key: "premium", Value: expires}}},
 		})
 
-		c.SetSameSite(net.SameSiteNoneMode)
-		c.SetCookie("premium", "premium", int(premium-now+(1*60*60*24*30)), "/", "."+domainBack, true, true)
+		c.SetSameSite(http.SameSiteNoneMode)
+		c.SetCookie("premium", "premium", int(premium-now+(1*60*60*24*30)), "/", "."+SELF_DOMAIN_NAME, true, true)
 
 		return expires
 	} else {
@@ -74,8 +73,8 @@ func updatePremium(c gin.Context) int64 {
 			{Key: "$set", Value: bson.D{{Key: "premium", Value: expires}}},
 		})
 
-		c.SetSameSite(net.SameSiteNoneMode)
-		c.SetCookie("premium", "premium", 1*60*60*24*30, "/", "."+domainBack, true, true)
+		c.SetSameSite(http.SameSiteNoneMode)
+		c.SetCookie("premium", "premium", 1*60*60*24*30, "/", "."+SELF_DOMAIN_NAME, true, true)
 
 		return expires
 	}
@@ -99,7 +98,7 @@ func getPayPalToken() (string, error) {
 	}
 
 	defer resp.Body.Close()
-	bodyText, err := ioutil.ReadAll(resp.Body)
+	bodyText, err := io.ReadAll(resp.Body)
 
 	if err != nil {
 		return "", errors.New("0")
@@ -128,7 +127,7 @@ func checkPayPalOrder(orderID, token string) bool {
 	}
 
 	defer resp.Body.Close()
-	bodyText, err := ioutil.ReadAll(resp.Body)
+	bodyText, err := io.ReadAll(resp.Body)
 
 	if err != nil {
 		return false
@@ -153,9 +152,5 @@ func checkPayPalOrderTime(last_update string) bool {
 	update := date.Unix()
 	minus := time.Now().Unix() - update
 
-	if minus > 3600 {
-		return false
-	}
-
-	return true
+	return minus <= 3600
 }

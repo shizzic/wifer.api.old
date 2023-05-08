@@ -39,7 +39,7 @@ type user struct {
 	Premium    int64  `json:"premium"`
 }
 
-func Change(data user, c gin.Context) error {
+func Change(data user, c *gin.Context) error {
 	if !IsUsernameValid(data.Username) {
 		return errors.New("0")
 	}
@@ -133,7 +133,7 @@ func Change(data user, c gin.Context) error {
 }
 
 // Change when user open my website last time
-func ChangeOnline(value bool, c gin.Context) {
+func ChangeOnline(value bool, c *gin.Context) {
 	id, _ := c.Cookie("id")
 	idInt, _ := strconv.Atoi(id)
 
@@ -153,7 +153,7 @@ func CheckUsernameAvailable(username string) bool {
 	return true
 }
 
-func CreateTemplates(text string, c gin.Context) {
+func CreateTemplates(text string, c *gin.Context) {
 	id, _ := c.Cookie("id")
 	idInt, _ := strconv.Atoi(id)
 
@@ -164,7 +164,7 @@ func CreateTemplates(text string, c gin.Context) {
 	})
 }
 
-func Logout(c gin.Context) {
+func Logout(c *gin.Context) {
 	id, _ := c.Cookie("id")
 	idInt, _ := strconv.Atoi(id)
 
@@ -175,11 +175,11 @@ func Logout(c gin.Context) {
 
 	MakeCookies("", "", -1, c)
 	c.SetSameSite(net.SameSiteNoneMode)
-	c.SetCookie("premium", "premium", -1, "/", "."+domainBack, true, true)
+	c.SetCookie("premium", "premium", -1, "/", "."+SELF_DOMAIN_NAME, true, true)
 }
 
 // Set active filed to false and handle user's content
-func DeactivateAccount(c gin.Context) {
+func DeactivateAccount(c *gin.Context) {
 	id, _ := c.Cookie("id")
 	idInt, _ := strconv.Atoi(id)
 
@@ -191,10 +191,10 @@ func DeactivateAccount(c gin.Context) {
 
 	MakeCookies("", "", -1, c)
 	c.SetSameSite(net.SameSiteNoneMode)
-	c.SetCookie("premium", "premium", -1, "/", "."+domainBack, true, true)
+	c.SetCookie("premium", "premium", -1, "/", "."+SELF_DOMAIN_NAME, true, true)
 }
 
-func GetParamsAfterLogin(c gin.Context) (bson.M, []interface{}) {
+func GetParamsAfterLogin(c *gin.Context) (bson.M, []interface{}) {
 	id, _ := c.Cookie("id")
 	idInt, _ := strconv.Atoi(id)
 
@@ -211,11 +211,11 @@ func GetParamsAfterLogin(c gin.Context) (bson.M, []interface{}) {
 			user["premium"] = 0
 
 			c.SetSameSite(net.SameSiteNoneMode)
-			c.SetCookie("premium", "premium", -1, "/", "."+domainBack, true, true)
+			c.SetCookie("premium", "premium", -1, "/", "."+SELF_DOMAIN_NAME, true, true)
 		} else {
 			if _, err := c.Cookie("premium"); err != nil {
 				c.SetSameSite(net.SameSiteNoneMode)
-				c.SetCookie("premium", "premium", int(user["premium"].(int64)-time.Now().Unix()), "/", "."+domainBack, true, true)
+				c.SetCookie("premium", "premium", int(user["premium"].(int64)-time.Now().Unix()), "/", "."+SELF_DOMAIN_NAME, true, true)
 			}
 		}
 	}
@@ -225,7 +225,7 @@ func GetParamsAfterLogin(c gin.Context) (bson.M, []interface{}) {
 	return user, newMessages
 }
 
-func TriggerTrial(c gin.Context) (int64, error) {
+func TriggerTrial(c *gin.Context) (int64, error) {
 	id, _ := c.Cookie("id")
 	idInt, _ := strconv.Atoi(id)
 
@@ -243,7 +243,7 @@ func TriggerTrial(c gin.Context) (int64, error) {
 			})
 
 			c.SetSameSite(net.SameSiteNoneMode)
-			c.SetCookie("premium", "premium", 1*60*60*24*7, "/", "."+domainBack, true, true)
+			c.SetCookie("premium", "premium", 1*60*60*24*7, "/", "."+SELF_DOMAIN_NAME, true, true)
 
 			return expires, nil
 		} else {
@@ -253,14 +253,14 @@ func TriggerTrial(c gin.Context) (int64, error) {
 			})
 
 			c.SetSameSite(net.SameSiteNoneMode)
-			c.SetCookie("premium", "premium", int(user["premium"].(int64)-time.Now().Unix()+(1*60*60*24*7)), "/", "."+domainBack, true, true)
+			c.SetCookie("premium", "premium", int(user["premium"].(int64)-time.Now().Unix()+(1*60*60*24*7)), "/", "."+SELF_DOMAIN_NAME, true, true)
 		}
 	}
 
 	return 0, errors.New("0")
 }
 
-func CheckPremium(c gin.Context) bool {
+func CheckPremium(c *gin.Context) bool {
 	id, _ := c.Cookie("id")
 	idInt, _ := strconv.Atoi(id)
 
@@ -274,7 +274,7 @@ func CheckPremium(c gin.Context) bool {
 		})
 
 		c.SetSameSite(net.SameSiteNoneMode)
-		c.SetCookie("premium", "premium", -1, "/", "."+domainBack, true, true)
+		c.SetCookie("premium", "premium", -1, "/", "."+SELF_DOMAIN_NAME, true, true)
 
 		return false
 	}

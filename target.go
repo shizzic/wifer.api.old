@@ -29,7 +29,7 @@ type Target struct {
 // _________________________GET_______________________________
 
 // Compilation of all functions for target
-func GetTarget(target int, c gin.Context) Target {
+func GetTarget(target int, c *gin.Context) Target {
 	id, _ := c.Cookie("id")
 	idInt, _ := strconv.Atoi(id)
 	var data Target
@@ -37,15 +37,15 @@ func GetTarget(target int, c gin.Context) Target {
 	if idInt > 0 && idInt != target && target > 0 {
 		AddView(idInt, target, c)
 
-		if err, like := GetLike(idInt, target, c); err == false {
+		if err, like := GetLike(idInt, target, c); !err {
 			data.Like = like
 		}
 
-		if err, priv := GetPrivate(idInt, target, c); err == false {
+		if err, priv := GetPrivate(idInt, target, c); !err {
 			data.Private = priv
 		}
 
-		if err, access := GetAccess(idInt, target, c); err == false {
+		if err, access := GetAccess(idInt, target, c); !err {
 			data.Access = access
 		}
 
@@ -56,7 +56,7 @@ func GetTarget(target int, c gin.Context) Target {
 }
 
 // Get like in profile
-func GetLike(id, target int, c gin.Context) (bool, bson.M) {
+func GetLike(id, target int, c *gin.Context) (bool, bson.M) {
 	var like bson.M
 	opts := options.FindOne().SetProjection(bson.M{"_id": 0, "text": 1})
 
@@ -67,7 +67,7 @@ func GetLike(id, target int, c gin.Context) (bool, bson.M) {
 	}
 }
 
-func GetAccess(id, target int, c gin.Context) (bool, []bson.M) {
+func GetAccess(id, target int, c *gin.Context) (bool, []bson.M) {
 	arr := [2]int{}
 	arr[0] = id
 	arr[1] = target
@@ -86,7 +86,7 @@ func GetAccess(id, target int, c gin.Context) (bool, []bson.M) {
 }
 
 // Get access for private images in profile
-func GetPrivate(id, target int, c gin.Context) (bool, []bson.M) {
+func GetPrivate(id, target int, c *gin.Context) (bool, []bson.M) {
 	arr := [2]int{}
 	arr[0] = id
 	arr[1] = target
@@ -105,7 +105,7 @@ func GetPrivate(id, target int, c gin.Context) (bool, []bson.M) {
 }
 
 // Get quantity of unseen notifications by user
-func GetNotifications(c gin.Context) map[string]int64 {
+func GetNotifications(c *gin.Context) map[string]int64 {
 	id, _ := c.Cookie("id")
 	idInt, _ := strconv.Atoi(id)
 	data := make(map[string]int64)
@@ -138,7 +138,7 @@ func GetNotifications(c gin.Context) map[string]int64 {
 // _________________________ADD_______________________________
 
 // Add view of another user's profile
-func AddView(id, target int, c gin.Context) {
+func AddView(id, target int, c *gin.Context) {
 	if id > 0 && id != target && target > 0 {
 		DB["views"].DeleteOne(ctx, bson.M{"user": id, "target": target})
 
@@ -153,7 +153,7 @@ func AddView(id, target int, c gin.Context) {
 }
 
 // User likes another user
-func AddPrivate(target int, c gin.Context) {
+func AddPrivate(target int, c *gin.Context) {
 	id, _ := c.Cookie("id")
 	idInt, _ := strconv.Atoi(id)
 
@@ -171,7 +171,7 @@ func AddPrivate(target int, c gin.Context) {
 }
 
 // User gives an access for chating
-func AddAccess(target int, c gin.Context) {
+func AddAccess(target int, c *gin.Context) {
 	id, _ := c.Cookie("id")
 	idInt, _ := strconv.Atoi(id)
 
@@ -189,7 +189,7 @@ func AddAccess(target int, c gin.Context) {
 }
 
 // User likes another user
-func AddLike(data target, c gin.Context) {
+func AddLike(data target, c *gin.Context) {
 	id, _ := c.Cookie("id")
 	idInt, _ := strconv.Atoi(id)
 
@@ -224,7 +224,7 @@ func AddLike(data target, c gin.Context) {
 
 // _________________________DELETE_______________________________
 
-func DeleteLike(target int, c gin.Context) {
+func DeleteLike(target int, c *gin.Context) {
 	id, _ := c.Cookie("id")
 	idInt, _ := strconv.Atoi(id)
 
@@ -233,7 +233,7 @@ func DeleteLike(target int, c gin.Context) {
 	}
 }
 
-func DeletePrivate(target int, c gin.Context) {
+func DeletePrivate(target int, c *gin.Context) {
 	id, _ := c.Cookie("id")
 	idInt, _ := strconv.Atoi(id)
 
@@ -242,7 +242,7 @@ func DeletePrivate(target int, c gin.Context) {
 	}
 }
 
-func DeleteAccess(target int, c gin.Context) {
+func DeleteAccess(target int, c *gin.Context) {
 	id, _ := c.Cookie("id")
 	idInt, _ := strconv.Atoi(id)
 
@@ -253,7 +253,7 @@ func DeleteAccess(target int, c gin.Context) {
 
 // ___________________________________________________________
 
-func GetTargets(data target, c gin.Context) (int, map[string][]bson.M) {
+func GetTargets(data target, c *gin.Context) (int, map[string][]bson.M) {
 	res := make(map[string][]bson.M)
 	q := -1
 	id, _ := c.Cookie("id")

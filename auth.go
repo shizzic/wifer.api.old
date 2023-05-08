@@ -59,7 +59,7 @@ func DecryptToken(token string, c *gin.Context) (username string) {
 	}
 
 	c.SetSameSite(net.SameSiteNoneMode)
-	c.SetCookie("auth", "auth", 1800, "/", "."+domainBack, true, true)
+	c.SetCookie("auth", "auth", 1800, "/", "."+SELF_DOMAIN_NAME, true, true)
 
 	return
 }
@@ -72,11 +72,11 @@ func EncryptToken(username string) (token string) {
 			token += string(char + 1)
 		}
 
-		rand.Seed(time.Now().UnixNano())
+		r := rand.New(rand.NewSource(time.Now().UnixNano()))
 
 		b := make([]byte, i)
 		for i := range b {
-			b[i] = letters[rand.Int63()%int64(len(letters))]
+			b[i] = letters[r.Int63()%int64(len(letters))]
 		}
 
 		token += string(b)
@@ -86,7 +86,7 @@ func EncryptToken(username string) (token string) {
 }
 
 // Check code's fit for ensure
-func CheckCode(id int, code string, c gin.Context) error {
+func CheckCode(id int, code string, c *gin.Context) error {
 	if !isCode(code) {
 		return errors.New("0")
 	}
@@ -119,20 +119,20 @@ func CheckCode(id int, code string, c gin.Context) error {
 }
 
 // Cookies for auth
-func MakeCookies(id, username string, time int, c gin.Context) {
+func MakeCookies(id, username string, time int, c *gin.Context) {
 	c.SetSameSite(net.SameSiteNoneMode)
-	c.SetCookie("token", EncryptToken(username), time, "/", "."+domainBack, true, true)
-	c.SetCookie("username", username, time, "/", "."+domainBack, true, true)
-	c.SetCookie("id", id, time, "/", "."+domainBack, true, true)
+	c.SetCookie("token", EncryptToken(username), time, "/", "."+SELF_DOMAIN_NAME, true, true)
+	c.SetCookie("username", username, time, "/", "."+SELF_DOMAIN_NAME, true, true)
+	c.SetCookie("id", id, time, "/", "."+SELF_DOMAIN_NAME, true, true)
 }
 
 // Make token for auth any email operations or something :)
 func MakeCode() string {
-	rand.Seed(time.Now().UnixNano())
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
 
 	b := make([]byte, 6)
 	for i := range b {
-		b[i] = nums[rand.Int63()%int64(len(nums))]
+		b[i] = nums[r.Int63()%int64(len(nums))]
 	}
 
 	return string(b)

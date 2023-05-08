@@ -3,17 +3,16 @@ package main
 import (
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
-	"github.com/h2non/bimg"
+	"github.com/nickalie/go-webpbin"
 	"go.mongodb.org/mongo-driver/bson"
 )
 
 // Just upload new image. If avatar isn't exist, then create avatar
-func UploadImage(dir string, c gin.Context) error {
+func UploadImage(dir string, c *gin.Context) error {
 	file, _ := c.FormFile("file")
 
 	if file.Size < 20000001 {
@@ -40,7 +39,7 @@ func UploadImage(dir string, c gin.Context) error {
 				Convert(path + "/avatar.webp")
 				UpdateDataBaseImages(idInt, path)
 			} else {
-				files, _ := ioutil.ReadDir(path + "/" + dir)
+				files, _ := os.ReadDir(path + "/" + dir)
 				root := path + "/" + dir + "/" + fmt.Sprint(len(files)+1) + ".webp"
 				c.SaveUploadedFile(file, root)
 				Convert(root)
@@ -57,7 +56,7 @@ func UploadImage(dir string, c gin.Context) error {
 }
 
 // Delete image. If target was an avatar, then make new avatar from first public image (if this image exist)
-func DeleteImage(isAvatar, dir, number string, c gin.Context) {
+func DeleteImage(isAvatar, dir, number string, c *gin.Context) {
 	id, _ := c.Cookie("id")
 	idInt, _ := strconv.Atoi(id)
 	path := "/var/www/images/" + id
@@ -79,7 +78,7 @@ func DeleteImage(isAvatar, dir, number string, c gin.Context) {
 }
 
 // Change public or private dir for image. Avatar must exist always
-func ChangeImageDir(isAvatar, dir, new, number string, c gin.Context) {
+func ChangeImageDir(isAvatar, dir, new, number string, c *gin.Context) {
 	id, _ := c.Cookie("id")
 	idInt, _ := strconv.Atoi(id)
 	path := "/var/www/images/" + id
@@ -125,7 +124,7 @@ func RenameImages(path, dir string, id int) {
 }
 
 // Replaced avatar alwayc contain in public dir
-func ReplaceAvatar(dir, num string, c gin.Context) {
+func ReplaceAvatar(dir, num string, c *gin.Context) {
 	id, _ := c.Cookie("id")
 	idInt, _ := strconv.Atoi(id)
 	path := "/var/www/images/" + id
@@ -172,7 +171,13 @@ func UpdateDataBaseImages(id int, path string) {
 
 // Convert image to WEBP format
 func Convert(dir string) {
-	buffer, _ := bimg.Read(dir)
-	converted, _ := bimg.NewImage(buffer).Convert(bimg.WEBP)
-	bimg.Write(dir, converted)
+	webpbin.NewCWebP().
+		Quality(80).
+		InputFile(dir).
+		OutputFile(dir + ".webp").
+		Run()
+
+	// buffer, _ := bimg.Read(dir)
+	// converted, _ := bimg.NewImage(buffer).Convert(bimg.WEBP)
+	// bimg.Write(dir, converted)
 }

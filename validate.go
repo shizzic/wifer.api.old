@@ -38,11 +38,7 @@ func isFacebook(id, token string) (string, error) {
 
 // Check if code from email valid for use
 func isCode(code string) bool {
-	if len(code) == 6 {
-		return true
-	}
-
-	return false
+	return len(code) == 6
 }
 
 func IsEmailValid(value string) bool {
@@ -62,27 +58,15 @@ func IsUsernameValid(value string) bool {
 
 	res := regexp.MustCompile(`\s`).MatchString(value)
 
-	if res {
-		return false
-	}
-
-	return true
+	return !res
 }
 
 func IsTitleValid(value string) bool {
-	if len(value) > 150 {
-		return false
-	}
-
-	return true
+	return len(value) <= 150
 }
 
 func IsAboutValid(value string) bool {
-	if len(value) > 1500 {
-		return false
-	}
-
-	return true
+	return len(value) <= 1500
 }
 
 func IsSmokeValid(value int) bool {
