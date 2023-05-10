@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"path/filepath"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -241,4 +242,29 @@ func Visit() {
 	DB["visits"].UpdateOne(ctx, bson.M{"_id": 1}, bson.D{
 		{Key: "$set", Value: bson.D{{Key: "count", Value: data["count"].(int32) + 1}}},
 	})
+}
+
+// Getter for all kinda files in project
+func Get_file(c *gin.Context) (string, error) {
+	path, _ := filepath.Abs("./" + c.Query("what") + "/" + c.Query("target_id") + "/" + c.Query("dir") + "/" + c.Query("filename"))
+
+	if c.Query("dir") == "private" {
+		if id, err := c.Cookie("id"); err == nil {
+			if id == c.Query("target_id") {
+				return path, nil
+			}
+
+			idInt, _ := strconv.Atoi(id)
+			user_id, _ := strconv.Atoi(c.Query("target_id"))
+			found_accesses, err := DB["private"].CountDocuments(ctx, bson.M{"user": user_id, "target": idInt})
+
+			if err == nil && found_accesses != 0 {
+				return path, nil
+			}
+		}
+	} else {
+		return path, nil
+	}
+
+	return "", errors.New("0")
 }

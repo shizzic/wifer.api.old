@@ -1,6 +1,7 @@
 package main
 
 import (
+	"path/filepath"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -182,8 +183,13 @@ func main() {
 		c.JSON(200, res)
 	})
 
-	r.POST("/upload", Auth(), func(c *gin.Context) {
-		if err := UploadImage(c.PostForm("dir"), c); err != nil {
+	r.POST("/upload-image", Auth(), func(c *gin.Context) {
+		var data File
+		c.Bind(&data)
+		data.ID, _ = c.Cookie("id")
+		data.EntryPath, _ = filepath.Abs("./images/" + data.ID)
+
+		if err := UploadImage(data, c); err != nil {
 			c.JSON(400, gin.H{"error": err.Error()})
 		} else {
 			c.JSON(200, gin.H{})
@@ -191,18 +197,34 @@ func main() {
 	})
 
 	r.PUT("/changeImageDir", Auth(), func(c *gin.Context) {
-		ChangeImageDir(c.Query("isAvatar"), c.Query("dir"), c.Query("new"), c.Query("number"), c)
+		var data File
+		c.Bind(&data)
+		data.ID, _ = c.Cookie("id")
+		data.EntryPath, _ = filepath.Abs("./images/" + data.ID)
+
+		ChangeImageDir(data)
 		c.JSON(200, "chanched")
 	})
 
 	r.PUT("/replaceAvatar", Auth(), func(c *gin.Context) {
-		ReplaceAvatar(c.Query("dir"), c.Query("number"), c)
+		var data File
+		c.Bind(&data)
+		data.ID, _ = c.Cookie("id")
+		data.EntryPath, _ = filepath.Abs("./images/" + data.ID)
+
+		ReplaceAvatar(data)
 		c.JSON(200, "replaced")
 	})
 
 	r.DELETE("/deleteImage", Auth(), func(c *gin.Context) {
-		DeleteImage(c.Query("isAvatar"), c.Query("dir"), c.Query("number"), c)
-		c.JSON(200, "deleted")
+		var data File
+		c.Bind(&data)
+		data.ID, _ = c.Cookie("id")
+		data.EntryPath, _ = filepath.Abs("./images/" + data.ID)
+		err := DeleteImage(data)
+		c.JSON(200, gin.H{
+			"error": err,
+		})
 	})
 
 	r.PUT("/translate", func(c *gin.Context) {
@@ -293,7 +315,17 @@ func main() {
 	})
 
 	r.GET("/file", func(c *gin.Context) {
-		c.File("C:/OpenServer/domains/dateshipper.api/images/1/avatar.webp")
+		path, err := Get_file(c)
+
+		if err == nil {
+			c.File(path)
+		} else {
+			c.JSON(401, "You don't have an access to this file")
+		}
+	})
+
+	r.GET("/test", func(c *gin.Context) {
+		c.String(200, "test")
 	})
 
 	run()

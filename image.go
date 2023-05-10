@@ -2,7 +2,6 @@ package main
 
 import (
 	"errors"
-	"fmt"
 	"os"
 	"strconv"
 
@@ -11,39 +10,53 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 )
 
+type File struct {
+	ID        string
+	EntryPath string
+	FullPath  string
+	Dir       string `form:"dir"`
+	NewDir    string `form:"newDir"`
+	Name      string `form:"name"`
+	Extension string `form:"extension"`
+	IsAvatar  bool   `form:"isAvatar"`
+}
+
 // Just upload new image. If avatar isn't exist, then create avatar
-func UploadImage(dir string, c *gin.Context) error {
+func UploadImage(data File, c *gin.Context) error {
+	os.MkdirAll(data.EntryPath+"/public", os.ModePerm)
+	os.MkdirAll(data.EntryPath+"/private", os.ModePerm)
 	file, _ := c.FormFile("file")
 
 	if file.Size < 20000001 {
-		isAvatar := 0
-		id, _ := c.Cookie("id")
-		path := "/var/www/images/" + id
-		os.MkdirAll(path+"/public", os.ModePerm)
-		os.MkdirAll(path+"/private", os.ModePerm)
-		_, avatar := os.Stat(path + "/avatar.webp")
-		idInt, _ := strconv.Atoi(id)
-
-		if avatar == nil {
-			isAvatar = 1
+		public_images, _ := os.ReadDir(data.EntryPath + "/public")
+		private_images, _ := os.ReadDir(data.EntryPath + "/private")
+		public_images_count := len(public_images)
+		private_images_count := len(private_images)
+		images_count := public_images_count + private_images_count
+		_, err := os.Stat(data.EntryPath + "/avatar.webp")
+		if err == nil {
+			images_count++
 		}
 
-		private, _ := os.ReadDir(path + "/private")
-		public, _ := os.ReadDir(path + "/public")
-
-		all := len(public) + len(private) + isAvatar
-
-		if all < 20 {
-			if dir != "private" && avatar != nil {
-				c.SaveUploadedFile(file, path+"/avatar.webp")
-				Convert(path + "/avatar.webp")
-				UpdateDataBaseImages(idInt, path)
+		if images_count < 20 {
+			if data.Dir == "public" && err != nil {
+				data.FullPath = data.EntryPath + "/avatar.webp"
+				c.SaveUploadedFile(file, data.FullPath)
+				ConvertToWebP(data.FullPath)
+				RecountImages(data)
 			} else {
-				files, _ := os.ReadDir(path + "/" + dir)
-				root := path + "/" + dir + "/" + fmt.Sprint(len(files)+1) + ".webp"
-				c.SaveUploadedFile(file, root)
-				Convert(root)
-				UpdateDataBaseImages(idInt, path)
+				var number int
+				if data.Dir == "public" {
+					number = public_images_count + 1
+				} else {
+					number = private_images_count + 1
+				}
+				data.Name = strconv.Itoa(number) + ".webp"
+				data.FullPath = data.EntryPath + "/" + data.Dir + "/" + data.Name
+
+				c.SaveUploadedFile(file, data.FullPath)
+				ConvertToWebP(data.FullPath)
+				RecountImages(data)
 			}
 		} else {
 			return errors.New("max_image")
@@ -56,128 +69,111 @@ func UploadImage(dir string, c *gin.Context) error {
 }
 
 // Delete image. If target was an avatar, then make new avatar from first public image (if this image exist)
-func DeleteImage(isAvatar, dir, number string, c *gin.Context) {
-	id, _ := c.Cookie("id")
-	idInt, _ := strconv.Atoi(id)
-	path := "/var/www/images/" + id
+func DeleteImage(data File) error {
+	if data.IsAvatar {
+		public_images, _ := os.ReadDir(data.EntryPath + "/public")
+		os.Remove(data.EntryPath + "/avatar.webp")
 
-	if isAvatar == "1" {
-		files, _ := os.ReadDir(path + "/public")
-		os.Remove(path + "/avatar.webp")
-
-		if len(files) > 0 {
-			os.Rename(path+"/public/"+files[0].Name(), path+"/avatar.webp")
-			RenameImages(path+"/", "public", idInt)
+		if len(public_images) > 0 {
+			os.Rename(data.EntryPath+"/public/"+public_images[0].Name(), data.EntryPath+"/avatar.webp")
+			RenameImages(data, "public")
 		} else {
-			RenameImages(path+"/", "public", idInt)
+			RecountImages(data)
 		}
 	} else {
-		os.Remove(path + "/" + dir + "/" + number + ".webp")
-		RenameImages(path+"/", dir, idInt)
+		os.Remove(data.EntryPath + "/" + data.Dir + "/" + data.Name + ".webp")
+		RenameImages(data, data.Dir)
 	}
+
+	return nil
 }
 
 // Change public or private dir for image. Avatar must exist always
-func ChangeImageDir(isAvatar, dir, new, number string, c *gin.Context) {
-	id, _ := c.Cookie("id")
-	idInt, _ := strconv.Atoi(id)
-	path := "/var/www/images/" + id
-
-	if isAvatar == "1" {
-		private, _ := os.ReadDir(path + "/private")
-		os.Rename(path+"/avatar.webp", path+"/private/"+fmt.Sprint(len(private)+1)+".webp")
-		public, _ := os.ReadDir(path + "/public")
+func ChangeImageDir(data File) {
+	if data.IsAvatar {
+		private, _ := os.ReadDir(data.EntryPath + "/private")
+		os.Rename(data.EntryPath+"/avatar.webp", data.EntryPath+"/private/"+strconv.Itoa(len(private)+1)+".webp")
+		public, _ := os.ReadDir(data.EntryPath + "/public")
 
 		if len(public) > 0 {
-			os.Rename(path+"/public/"+public[0].Name(), path+"/avatar.webp")
-			RenameImages(path+"/", "public", idInt)
+			os.Rename(data.EntryPath+"/public/"+public[0].Name(), data.EntryPath+"/avatar.webp")
+			RenameImages(data, "public")
 		} else {
-			RenameImages(path+"/", "private", idInt)
+			RenameImages(data, "private")
 		}
 	} else {
-		list, _ := os.ReadDir(path + "/" + new)
-		_, err := os.Stat(path + "/avatar.webp")
+		_, err := os.Stat(data.EntryPath + "/avatar.webp")
 
 		// Make avatar from private image if avatar isn't exist
-		if err != nil && new == "public" {
-			os.Rename(path+"/"+dir+"/"+number+".webp", path+"/avatar.webp")
-			RenameImages(path+"/", dir, idInt)
-		} else if err == nil {
-			os.Rename(path+"/"+dir+"/"+number+".webp", path+"/"+new+"/"+fmt.Sprint(len(list)+1)+".webp")
-			RenameImages(path+"/", dir, idInt)
+		if err != nil && data.NewDir == "public" {
+			os.Rename(data.EntryPath+"/"+data.Dir+"/"+data.Name+".webp", data.EntryPath+"/avatar.webp")
+			RenameImages(data, data.Dir)
+		} else {
+			files, _ := os.ReadDir(data.EntryPath + "/" + data.NewDir)
+			os.Rename(data.EntryPath+"/"+data.Dir+"/"+data.Name+".webp", data.EntryPath+"/"+data.NewDir+"/"+strconv.Itoa(len(files)+1)+".webp")
+			RenameImages(data, data.Dir)
 		}
+	}
+}
+
+// // Replaced avatar alwayc contain in public dir
+func ReplaceAvatar(data File) {
+	os.Rename(data.EntryPath+"/"+data.Dir+"/"+data.Name+".webp", data.EntryPath+"/new_avatar.webp")
+
+	if data.Dir == "private" {
+		files, _ := os.ReadDir(data.EntryPath + "/public")
+		os.Rename(data.EntryPath+"/avatar.webp", data.EntryPath+"/public/"+strconv.Itoa(len(files)+1)+".webp")
+	} else {
+		os.Rename(data.EntryPath+"/avatar.webp", data.EntryPath+"/public/"+data.Name+".webp")
+	}
+
+	os.Rename(data.EntryPath+"/new_avatar.webp", data.EntryPath+"/avatar.webp")
+
+	if data.Dir == "private" {
+		RenameImages(data, "private")
+		RenameImages(data, "public")
 	}
 }
 
 // Make straight line of images from 1 to count of all images in dir
-func RenameImages(path, dir string, id int) {
-	os.MkdirAll(path+"new", os.ModePerm)
-	list, _ := os.ReadDir(path + dir)
-
-	for key, image := range list {
-		os.Rename(path+dir+"/"+image.Name(), path+"new/"+fmt.Sprint(key+1)+".webp")
+func RenameImages(data File, target_dir string) {
+	os.MkdirAll(data.EntryPath+"/new", os.ModePerm)
+	files, _ := os.ReadDir(data.EntryPath + "/" + target_dir)
+	for index, image := range files {
+		os.Rename(data.EntryPath+"/"+target_dir+"/"+image.Name(), data.EntryPath+"/new/"+strconv.Itoa(index+1)+".webp")
 	}
-
-	os.Remove(path + dir)
-	os.Rename(path+"new", path+dir)
-	UpdateDataBaseImages(id, path)
-}
-
-// Replaced avatar alwayc contain in public dir
-func ReplaceAvatar(dir, num string, c *gin.Context) {
-	id, _ := c.Cookie("id")
-	idInt, _ := strconv.Atoi(id)
-	path := "/var/www/images/" + id
-	os.Rename(path+"/"+dir+"/"+num+".webp", path+"/new.webp")
-
-	if dir == "private" {
-		files, _ := os.ReadDir(path + "public")
-		os.Rename(path+"/avatar.webp", path+"/public/"+fmt.Sprint(len(files)+1)+".webp")
-	} else {
-		os.Rename(path+"/avatar.webp", path+"/public/"+num+".webp")
-	}
-
-	os.Rename(path+"/new.webp", path+"/avatar.webp")
-
-	if dir == "private" {
-		RenameImages(path+"/", "private", idInt)
-		RenameImages(path+"/", "public", idInt)
-	}
+	os.Remove(data.EntryPath + "/" + target_dir)
+	os.Rename(data.EntryPath+"/new", data.EntryPath+"/"+target_dir)
+	RecountImages(data)
 }
 
 // Update info about images in database
-func UpdateDataBaseImages(id int, path string) {
-	avatar := true
-	ava := 1
-	_, err := os.Stat(path + "/avatar.webp")
-
-	if err != nil {
-		avatar = false
-		ava = 0
+func RecountImages(data File) {
+	public_images, _ := os.ReadDir(data.EntryPath + "/public")
+	private_images, _ := os.ReadDir(data.EntryPath + "/private")
+	public_images_count := len(public_images)
+	private_images_count := len(private_images)
+	images_count := public_images_count + private_images_count
+	has_avatar := false
+	if _, err := os.Stat(data.EntryPath + "/avatar.webp"); err == nil {
+		has_avatar = true
+		images_count++
 	}
 
-	public, _ := os.ReadDir(path + "/public")
-	private, _ := os.ReadDir(path + "/private")
-	pubLen := len(public)
-	priLen := len(private)
-
-	DB["users"].UpdateOne(ctx, bson.M{"_id": id}, bson.D{
-		{Key: "$set", Value: bson.D{{Key: "avatar", Value: avatar}}},
-		{Key: "$set", Value: bson.D{{Key: "public", Value: pubLen}}},
-		{Key: "$set", Value: bson.D{{Key: "private", Value: priLen}}},
-		{Key: "$set", Value: bson.D{{Key: "images", Value: pubLen + priLen + ava}}},
+	user_id, _ := strconv.Atoi(data.ID)
+	DB["users"].UpdateOne(ctx, bson.M{"_id": user_id}, bson.D{
+		{Key: "$set", Value: bson.D{{Key: "avatar", Value: has_avatar}}},
+		{Key: "$set", Value: bson.D{{Key: "public", Value: public_images_count}}},
+		{Key: "$set", Value: bson.D{{Key: "private", Value: private_images_count}}},
+		{Key: "$set", Value: bson.D{{Key: "images", Value: images_count}}},
 	})
 }
 
-// Convert image to WEBP format
-func Convert(dir string) {
+// Convert image to WebP format
+func ConvertToWebP(full_path_to_file string) {
 	webpbin.NewCWebP().
 		Quality(80).
-		InputFile(dir).
-		OutputFile(dir + ".webp").
+		InputFile(full_path_to_file).
+		OutputFile(full_path_to_file).
 		Run()
-
-	// buffer, _ := bimg.Read(dir)
-	// converted, _ := bimg.NewImage(buffer).Convert(bimg.WEBP)
-	// bimg.Write(dir, converted)
 }
