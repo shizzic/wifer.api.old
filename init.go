@@ -64,16 +64,16 @@ func connect() *mongo.Client {
 }
 
 // Redirect every NOT https request to https
-// func redirect() gin.HandlerFunc {
-// 	return func(c *gin.Context) {
-// 		if c.Request.Proto != "HTTP/2.0" {
-// 			c.Redirect(302, "https://"+domainBack+c.Request.URL.String())
-// 			return
-// 		}
+func redirect() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		if c.Request.Proto != "HTTP/2.0" {
+			c.Redirect(302, "https://"+SELF_DOMAIN_NAME+c.Request.URL.String())
+			return
+		}
 
-// 		c.Next()
-// 	}
-// }
+		c.Next()
+	}
+}
 
 func CORSMiddleware() gin.HandlerFunc {
 	return cors.New(cors.Config{
@@ -87,7 +87,6 @@ func CORSMiddleware() gin.HandlerFunc {
 func setHeaders() {
 	r.SetTrustedProxies(nil)
 	router.SetTrustedProxies(nil)
-	// router.Use(redirect()) // bind endless redirect for NONE https requests
 	r.Use(CORSMiddleware())
 	router.Use(CORSMiddleware())
 	r.MaxMultipartMemory = 8 << 20
@@ -97,8 +96,14 @@ func setHeaders() {
 // Run both: http and https servers
 func run() {
 	// gin.SetMode(gin.ReleaseMode)
-	// go r.RunTLS(serverID+":443", "/etc/ssl/wifer/__wifer-test_ru.full.crt", "/etc/ssl/wifer/__wifer-test_ru.key")
-	r.Run(serverID + ":80")
+
+	if gin.Mode() == "release" {
+		router.Use(redirect()) // bind endless redirect for NONE https requests
+		go r.RunTLS(serverID+":443", "/etc/ssl/wifer/__wifer-test_ru.full.crt", "/etc/ssl/wifer/__wifer-test_ru.key")
+		router.Run(serverID + ":80")
+	} else {
+		r.Run(serverID + ":80")
+	}
 }
 
 func clearOnline() {
