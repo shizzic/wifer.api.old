@@ -175,7 +175,7 @@ func Logout(c *gin.Context) {
 
 	MakeCookies("", "", -1, c)
 	c.SetSameSite(net.SameSiteNoneMode)
-	c.SetCookie("premium", "premium", -1, "/", "."+SELF_DOMAIN_NAME, true, true)
+	c.SetCookie("premium", "premium", -1, "/", "."+config.SELF_DOMAIN_NAME, true, true)
 }
 
 // Set active filed to false and handle user's content
@@ -191,7 +191,7 @@ func DeactivateAccount(c *gin.Context) {
 
 	MakeCookies("", "", -1, c)
 	c.SetSameSite(net.SameSiteNoneMode)
-	c.SetCookie("premium", "premium", -1, "/", "."+SELF_DOMAIN_NAME, true, true)
+	c.SetCookie("premium", "premium", -1, "/", "."+config.SELF_DOMAIN_NAME, true, true)
 }
 
 func GetParamsAfterLogin(c *gin.Context) (bson.M, []interface{}) {
@@ -211,11 +211,11 @@ func GetParamsAfterLogin(c *gin.Context) (bson.M, []interface{}) {
 			user["premium"] = 0
 
 			c.SetSameSite(net.SameSiteNoneMode)
-			c.SetCookie("premium", "premium", -1, "/", "."+SELF_DOMAIN_NAME, true, true)
+			c.SetCookie("premium", "premium", -1, "/", "."+config.SELF_DOMAIN_NAME, true, true)
 		} else {
 			if _, err := c.Cookie("premium"); err != nil {
 				c.SetSameSite(net.SameSiteNoneMode)
-				c.SetCookie("premium", "premium", int(user["premium"].(int64)-time.Now().Unix()), "/", "."+SELF_DOMAIN_NAME, true, true)
+				c.SetCookie("premium", "premium", int(user["premium"].(int64)-time.Now().Unix()), "/", "."+config.SELF_DOMAIN_NAME, true, true)
 			}
 		}
 	}
@@ -243,7 +243,7 @@ func TriggerTrial(c *gin.Context) (int64, error) {
 			})
 
 			c.SetSameSite(net.SameSiteNoneMode)
-			c.SetCookie("premium", "premium", 1*60*60*24*7, "/", "."+SELF_DOMAIN_NAME, true, true)
+			c.SetCookie("premium", "premium", 1*60*60*24*7, "/", "."+config.SELF_DOMAIN_NAME, true, true)
 
 			return expires, nil
 		} else {
@@ -253,7 +253,7 @@ func TriggerTrial(c *gin.Context) (int64, error) {
 			})
 
 			c.SetSameSite(net.SameSiteNoneMode)
-			c.SetCookie("premium", "premium", int(user["premium"].(int64)-time.Now().Unix()+(1*60*60*24*7)), "/", "."+SELF_DOMAIN_NAME, true, true)
+			c.SetCookie("premium", "premium", int(user["premium"].(int64)-time.Now().Unix()+(1*60*60*24*7)), "/", "."+config.SELF_DOMAIN_NAME, true, true)
 		}
 	}
 
@@ -274,7 +274,7 @@ func CheckPremium(c *gin.Context) bool {
 		})
 
 		c.SetSameSite(net.SameSiteNoneMode)
-		c.SetCookie("premium", "premium", -1, "/", "."+SELF_DOMAIN_NAME, true, true)
+		c.SetCookie("premium", "premium", -1, "/", "."+config.SELF_DOMAIN_NAME, true, true)
 
 		return false
 	}

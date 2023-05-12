@@ -1,8 +1,8 @@
 package main
 
 import (
-	"crypto/tls"
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/google/uuid"
@@ -11,15 +11,15 @@ import (
 
 func SendCode(to, code, id string) error {
 	server := mail.NewSMTPClient()
-	server.Host = "skvmrelay.netangels.ru"
-	server.Port = 25
-	server.Username = "admin@" + SELF_DOMAIN_NAME
-	server.Password = EMAIL_PASSWORD
+	server.Host = config.EMAIL.HOST
+	server.Port = config.EMAIL.PORT
+	server.Username = config.EMAIL.USERNAME
+	server.Password = config.EMAIL.PASSWORD
 	server.Encryption = mail.EncryptionSTARTTLS
 	server.KeepAlive = false
 	server.ConnectTimeout = 10 * time.Second
 	server.SendTimeout = 10 * time.Second
-	server.TLSConfig = &tls.Config{InsecureSkipVerify: true}
+	// server.TLSConfig = &tls.Config{InsecureSkipVerify: true}
 	smtpClient, err := server.Connect()
 
 	if err != nil {
@@ -27,17 +27,15 @@ func SendCode(to, code, id string) error {
 	}
 
 	email := mail.NewMSG()
-	email.SetFrom("luckriza <admin@" + SELF_DOMAIN_NAME + ">").
+	email.SetFrom("dateshipper <" + config.EMAIL.USERNAME + ">").
 		AddTo(to).
 		SetSubject("Confirm registration")
 
 	msgUUID, _ := uuid.NewRandom()
-	msgID := fmt.Sprintf("<%s@"+SELF_DOMAIN_NAME+">", msgUUID.String())
+	msgID := fmt.Sprintf("<%s@"+config.SELF_DOMAIN_NAME+">", msgUUID.String())
 	email.AddHeader("Message-ID", msgID)
 
-	fmt.Println(msgID)
-
-	email.SetBody(mail.TextHTML, "<p><h1>Here is a link to sign in into luckriza :)</h1></p><p><a href=\""+CLIENT_DOMAIN+"/auth/"+id+"/"+code+"\">Enjoy</a></p>")
+	email.SetBody(mail.TextHTML, "<p><h1>Here is a link to sign into dateshipper :)</h1></p><p><a href=\""+config.CLIENT_DOMAIN+"/auth/"+id+"/"+code+"\">Enjoy</a></p>")
 	err = email.Send(smtpClient)
 
 	if err != nil {
@@ -49,37 +47,35 @@ func SendCode(to, code, id string) error {
 
 func ContactMe(name, sender, subject, message string) error {
 	server := mail.NewSMTPClient()
-	server.Host = "skvmrelay.netangels.ru"
-	server.Port = 25
-	server.Username = "admin@" + SELF_DOMAIN_NAME
-	server.Password = EMAIL_PASSWORD
+	server.Host = config.EMAIL.HOST
+	server.Port = config.EMAIL.PORT
+	server.Username = config.EMAIL.USERNAME
+	server.Password = config.EMAIL.PASSWORD
 	server.Encryption = mail.EncryptionSTARTTLS
 	server.KeepAlive = false
 	server.ConnectTimeout = 10 * time.Second
 	server.SendTimeout = 10 * time.Second
-	server.TLSConfig = &tls.Config{InsecureSkipVerify: true}
+	// server.TLSConfig = &tls.Config{InsecureSkipVerify: true}
 	smtpClient, err := server.Connect()
 
 	if err != nil {
-		return err
+		log.Println(err)
 	}
 
 	email := mail.NewMSG()
-	email.SetFrom("luckriza <admin@" + SELF_DOMAIN_NAME + ">").
-		AddTo("kotcich@gmail.com").
+	email.SetFrom("dateshipper <" + config.EMAIL.USERNAME + ">").
+		AddTo(config.ADMIN_EMAIL).
 		SetSubject(subject)
 
 	msgUUID, _ := uuid.NewRandom()
-	msgID := fmt.Sprintf("<%s@"+SELF_DOMAIN_NAME+">", msgUUID.String())
+	msgID := fmt.Sprintf("<%s@"+config.SELF_DOMAIN_NAME+">", msgUUID.String())
 	email.AddHeader("Message-ID", msgID)
-
-	fmt.Println(msgID)
 
 	email.SetBody(mail.TextHTML, "<p>name: "+name+" - email: "+sender+"</p>"+message)
 	err = email.Send(smtpClient)
 
 	if err != nil {
-		return err
+		log.Println(err)
 	}
 
 	return nil

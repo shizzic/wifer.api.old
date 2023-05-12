@@ -8,9 +8,6 @@ import (
 )
 
 func main() {
-	clearOnline()
-	setHeaders()
-
 	r.POST("/signin", func(c *gin.Context) {
 		var data signin
 		c.Bind(&data)

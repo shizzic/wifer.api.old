@@ -59,7 +59,7 @@ func DecryptToken(token string, c *gin.Context) (username string) {
 	}
 
 	c.SetSameSite(net.SameSiteNoneMode)
-	c.SetCookie("auth", "auth", 1800, "/", "."+SELF_DOMAIN_NAME, true, true)
+	c.SetCookie("auth", "auth", 1800, "/", "."+config.SELF_DOMAIN_NAME, true, true)
 
 	return
 }
@@ -121,9 +121,9 @@ func CheckCode(id int, code string, c *gin.Context) error {
 // Cookies for auth
 func MakeCookies(id, username string, time int, c *gin.Context) {
 	c.SetSameSite(net.SameSiteNoneMode)
-	c.SetCookie("token", EncryptToken(username), time, "/", "."+SELF_DOMAIN_NAME, true, true)
-	c.SetCookie("username", username, time, "/", "."+SELF_DOMAIN_NAME, true, true)
-	c.SetCookie("id", id, time, "/", "."+SELF_DOMAIN_NAME, true, true)
+	c.SetCookie("token", EncryptToken(username), time, "/", "."+config.SELF_DOMAIN_NAME, true, true)
+	c.SetCookie("username", username, time, "/", "."+config.SELF_DOMAIN_NAME, true, true)
+	c.SetCookie("id", id, time, "/", "."+config.SELF_DOMAIN_NAME, true, true)
 }
 
 // Make token for auth any email operations or something :)

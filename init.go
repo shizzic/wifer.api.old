@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"os"
+	"strconv"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -14,12 +15,24 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+type Email struct {
+	HOST     string
+	USERNAME string
+	PASSWORD string
+	PORT     int
+}
+
 // env
-var MONGO_CONNECTION_STRING string = load_env_first_time("MONGO_CONNECTION_STRING")
-var serverID string = os.Getenv("SERVER_ID")
-var CLIENT_DOMAIN string = os.Getenv("CLIENT_DOMAIN")
-var SELF_DOMAIN_NAME string = os.Getenv("SELF_DOMAIN_NAME")
-var EMAIL_PASSWORD string = os.Getenv("EMAIL_PASSWORD")
+type Config struct {
+	MONGO_CONNECTION_STRING string
+	SERVER_IP               string
+	CLIENT_DOMAIN           string
+	SELF_DOMAIN_NAME        string
+	ADMIN_EMAIL             string
+	EMAIL                   Email
+}
+
+var config = get_config()
 
 // Connections
 var ctx = context.TODO()
@@ -42,13 +55,39 @@ var DB = map[string]*mongo.Collection{
 	"payments":  mongo_client.Database("db").Collection("payments"),
 }
 
-func load_env_first_time(key string) string {
-	godotenv.Load(".env")
-	return os.Getenv(key)
+// init is invoked before main()
+func init() {
+	clearOnline()
+	setHeaders()
+}
+
+func get_config() *Config {
+	// gin.SetMode(gin.ReleaseMode)
+
+	if gin.Mode() == "release" {
+		godotenv.Load(".env.production")
+	} else {
+		godotenv.Load(".env.development")
+	}
+	port, _ := strconv.Atoi(os.Getenv("EMAIL_PORT"))
+
+	return &Config{
+		MONGO_CONNECTION_STRING: os.Getenv("MONGO_CONNECTION_STRING"),
+		SERVER_IP:               os.Getenv("SERVER_IP"),
+		CLIENT_DOMAIN:           os.Getenv("CLIENT_DOMAIN"),
+		SELF_DOMAIN_NAME:        os.Getenv("SELF_DOMAIN_NAME"),
+		ADMIN_EMAIL:             os.Getenv("ADMIN_EMAIL"),
+		EMAIL: Email{
+			HOST:     os.Getenv("EMAIL_HOST"),
+			USERNAME: os.Getenv("EMAIL_USERNAME"),
+			PASSWORD: os.Getenv("EMAIL_PASSWORD"),
+			PORT:     port,
+		},
+	}
 }
 
 func connect() *mongo.Client {
-	client, err := mongo.NewClient(options.Client().ApplyURI(MONGO_CONNECTION_STRING))
+	client, err := mongo.NewClient(options.Client().ApplyURI(config.MONGO_CONNECTION_STRING))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -67,7 +106,7 @@ func connect() *mongo.Client {
 func redirect() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if c.Request.Proto != "HTTP/2.0" {
-			c.Redirect(302, "https://"+SELF_DOMAIN_NAME+c.Request.URL.String())
+			c.Redirect(302, "https://"+config.SELF_DOMAIN_NAME+c.Request.URL.String())
 			return
 		}
 
@@ -77,7 +116,7 @@ func redirect() gin.HandlerFunc {
 
 func CORSMiddleware() gin.HandlerFunc {
 	return cors.New(cors.Config{
-		AllowOrigins:     []string{CLIENT_DOMAIN},
+		AllowOrigins:     []string{config.CLIENT_DOMAIN},
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"},
 		AllowHeaders:     []string{"Content-Type", "Content-Length", "Accept-Encoding", "X-CSRF-Token", "Authorization", "accept", "origin", "Cache-Control", "X-Requested-With", "Access-Control-Max-Age"},
 		AllowCredentials: true,
@@ -95,14 +134,12 @@ func setHeaders() {
 
 // Run both: http and https servers
 func run() {
-	// gin.SetMode(gin.ReleaseMode)
-
 	if gin.Mode() == "release" {
 		router.Use(redirect()) // bind endless redirect for NONE https requests
-		go r.RunTLS(serverID+":443", "/etc/ssl/wifer/__wifer-test_ru.full.crt", "/etc/ssl/wifer/__wifer-test_ru.key")
-		router.Run(serverID + ":80")
+		go r.RunTLS(config.SERVER_IP+":443", "/etc/ssl/wifer/__wifer-test_ru.full.crt", "/etc/ssl/wifer/__wifer-test_ru.key")
+		router.Run(config.SERVER_IP + ":80")
 	} else {
-		r.Run(serverID + ":80")
+		r.Run(config.SERVER_IP + ":80")
 	}
 }
 

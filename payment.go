@@ -63,7 +63,7 @@ func updatePremium(c *gin.Context) int64 {
 		})
 
 		c.SetSameSite(http.SameSiteNoneMode)
-		c.SetCookie("premium", "premium", int(premium-now+(1*60*60*24*30)), "/", "."+SELF_DOMAIN_NAME, true, true)
+		c.SetCookie("premium", "premium", int(premium-now+(1*60*60*24*30)), "/", "."+config.SELF_DOMAIN_NAME, true, true)
 
 		return expires
 	} else {
@@ -74,7 +74,7 @@ func updatePremium(c *gin.Context) int64 {
 		})
 
 		c.SetSameSite(http.SameSiteNoneMode)
-		c.SetCookie("premium", "premium", 1*60*60*24*30, "/", "."+SELF_DOMAIN_NAME, true, true)
+		c.SetCookie("premium", "premium", 1*60*60*24*30, "/", "."+config.SELF_DOMAIN_NAME, true, true)
 
 		return expires
 	}

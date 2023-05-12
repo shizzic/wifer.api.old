@@ -6,5 +6,5 @@ dateshipper
 /deactivate/deactivate
 /premium/premium
 .git/
-.env
+.env.*
 .bin
