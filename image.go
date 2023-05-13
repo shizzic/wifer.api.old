@@ -33,8 +33,7 @@ func UploadImage(data File, c *gin.Context) error {
 		public_images_count := len(public_images)
 		private_images_count := len(private_images)
 		images_count := public_images_count + private_images_count
-		f, err := os.Open(data.EntryPath + "/avatar.webp")
-		f.Close()
+		_, err := os.Stat(data.EntryPath + "/avatar.webp")
 		if err == nil {
 			images_count++
 		}
@@ -103,8 +102,7 @@ func ChangeImageDir(data File) {
 			RenameImages(data, "private")
 		}
 	} else {
-		f, err := os.Open(data.EntryPath + "/avatar.webp")
-		f.Close()
+		_, err := os.Stat(data.EntryPath + "/avatar.webp")
 
 		// Make avatar from private image if avatar isn't exist
 		if err != nil && data.NewDir == "public" {
@@ -157,8 +155,7 @@ func RecountImages(data File) {
 	private_images_count := len(private_images)
 	images_count := public_images_count + private_images_count
 	has_avatar := false
-	f, err := os.Open(data.EntryPath + "/avatar.webp")
-	f.Close()
+	_, err := os.Stat(data.EntryPath + "/avatar.webp")
 	if err == nil {
 		has_avatar = true
 		images_count++
