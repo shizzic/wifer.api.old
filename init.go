@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"os"
+	"path/filepath"
 	"strconv"
 
 	"github.com/gin-contrib/cors"
@@ -15,13 +16,6 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-type Email struct {
-	HOST     string
-	USERNAME string
-	PASSWORD string
-	PORT     int
-}
-
 // env
 type Config struct {
 	MONGO_CONNECTION_STRING string
@@ -30,6 +24,10 @@ type Config struct {
 	SELF_DOMAIN_NAME        string
 	ADMIN_EMAIL             string
 	EMAIL                   Email
+	PATH                    string
+	BACKBLAZE_ID            string
+	BACKBLAZE_KEY           string
+	PRODUCT_NAME            string
 }
 
 var config = get_config()
@@ -59,6 +57,7 @@ var DB = map[string]*mongo.Collection{
 func init() {
 	clearOnline()
 	setHeaders()
+	start_cron()
 }
 
 func get_config() *Config {
@@ -70,6 +69,7 @@ func get_config() *Config {
 		godotenv.Load(".env.development")
 	}
 	port, _ := strconv.Atoi(os.Getenv("EMAIL_PORT"))
+	path, _ := filepath.Abs("./")
 
 	return &Config{
 		MONGO_CONNECTION_STRING: os.Getenv("MONGO_CONNECTION_STRING"),
@@ -83,6 +83,10 @@ func get_config() *Config {
 			PASSWORD: os.Getenv("EMAIL_PASSWORD"),
 			PORT:     port,
 		},
+		PATH:          path,
+		BACKBLAZE_ID:  os.Getenv("BACKBLAZE_ID"),
+		BACKBLAZE_KEY: os.Getenv("BACKBLAZE_KEY"),
+		PRODUCT_NAME:  os.Getenv("PRODUCT_NAME"),
 	}
 }
 

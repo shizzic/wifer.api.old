@@ -2,7 +2,6 @@ package main
 
 import (
 	"errors"
-	"path/filepath"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -246,7 +245,7 @@ func Visit() {
 
 // Getter for all kinda files in project
 func Get_file(c *gin.Context) (string, error) {
-	path, _ := filepath.Abs("./" + c.Query("what") + "/" + c.Query("target_id") + "/" + c.Query("dir") + "/" + c.Query("filename"))
+	path := config.PATH + "/" + c.Query("what") + "/" + c.Query("target_id") + "/" + c.Query("dir") + "/" + c.Query("filename")
 
 	if c.Query("dir") == "private" {
 		if id, err := c.Cookie("id"); err == nil {

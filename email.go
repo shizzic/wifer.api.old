@@ -9,6 +9,13 @@ import (
 	mail "github.com/xhit/go-simple-mail/v2"
 )
 
+type Email struct {
+	HOST     string
+	USERNAME string
+	PASSWORD string
+	PORT     int
+}
+
 func SendCode(to, code, id string) error {
 	server := mail.NewSMTPClient()
 	server.Host = config.EMAIL.HOST
@@ -27,7 +34,7 @@ func SendCode(to, code, id string) error {
 	}
 
 	email := mail.NewMSG()
-	email.SetFrom("dateshipper <" + config.EMAIL.USERNAME + ">").
+	email.SetFrom(config.PRODUCT_NAME + " <" + config.EMAIL.USERNAME + ">").
 		AddTo(to).
 		SetSubject("Confirm registration")
 
@@ -35,7 +42,7 @@ func SendCode(to, code, id string) error {
 	msgID := fmt.Sprintf("<%s@"+config.SELF_DOMAIN_NAME+">", msgUUID.String())
 	email.AddHeader("Message-ID", msgID)
 
-	email.SetBody(mail.TextHTML, "<p><h1>Here is a link to sign into dateshipper :)</h1></p><p><a href=\""+config.CLIENT_DOMAIN+"/auth/"+id+"/"+code+"\">Enjoy</a></p>")
+	email.SetBody(mail.TextHTML, "<p><h1>Here is a link to sign into "+config.PRODUCT_NAME+" :)</h1></p><p><a href=\""+config.CLIENT_DOMAIN+"/auth/"+id+"/"+code+"\">Enjoy</a></p>")
 	err = email.Send(smtpClient)
 
 	if err != nil {
@@ -63,7 +70,7 @@ func ContactMe(name, sender, subject, message string) error {
 	}
 
 	email := mail.NewMSG()
-	email.SetFrom("dateshipper <" + config.EMAIL.USERNAME + ">").
+	email.SetFrom(config.PRODUCT_NAME + " <" + config.EMAIL.USERNAME + ">").
 		AddTo(config.ADMIN_EMAIL).
 		SetSubject(subject)
 

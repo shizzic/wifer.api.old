@@ -1,7 +1,6 @@
 package main
 
 import (
-	"path/filepath"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -184,7 +183,7 @@ func main() {
 		var data File
 		c.Bind(&data)
 		data.ID, _ = c.Cookie("id")
-		data.EntryPath, _ = filepath.Abs("./images/" + data.ID)
+		data.EntryPath = config.PATH + "/images/" + data.ID
 
 		if err := UploadImage(data, c); err != nil {
 			c.JSON(400, gin.H{"error": err.Error()})
@@ -197,7 +196,7 @@ func main() {
 		var data File
 		c.Bind(&data)
 		data.ID, _ = c.Cookie("id")
-		data.EntryPath, _ = filepath.Abs("./images/" + data.ID)
+		data.EntryPath = config.PATH + "/images/" + data.ID
 
 		ChangeImageDir(data)
 		c.JSON(200, "chanched")
@@ -207,7 +206,7 @@ func main() {
 		var data File
 		c.Bind(&data)
 		data.ID, _ = c.Cookie("id")
-		data.EntryPath, _ = filepath.Abs("./images/" + data.ID)
+		data.EntryPath = config.PATH + "/images/" + data.ID
 
 		ReplaceAvatar(data)
 		c.JSON(200, "replaced")
@@ -217,7 +216,7 @@ func main() {
 		var data File
 		c.Bind(&data)
 		data.ID, _ = c.Cookie("id")
-		data.EntryPath, _ = filepath.Abs("./images/" + data.ID)
+		data.EntryPath = config.PATH + "/images/" + data.ID
 		err := DeleteImage(data)
 		c.JSON(200, gin.H{
 			"error": err,
