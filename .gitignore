@@ -5,11 +5,6 @@ dateshipper
 !cron_dump/.gitkeep 
 /images
 
-/backup/backup
-/imgBackup/imgBackup
-/deactivate/deactivate
-/premium/premium
-
 .git/
 .env.*
 .bin
