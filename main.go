@@ -320,9 +320,5 @@ func main() {
 		}
 	})
 
-	r.GET("/test", func(c *gin.Context) {
-		c.String(200, "test")
-	})
-
 	run()
 }
