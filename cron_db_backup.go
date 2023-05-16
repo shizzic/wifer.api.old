@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"log"
 	"os"
 	"os/exec"
 
@@ -14,7 +13,6 @@ func database_dump() {
 	err := exec.Command("mongodump", config.MONGO_CONNECTION_STRING, "-d", "db", "-o", config.PATH+"/cron_dump").Run()
 
 	if err == nil {
-		log.Println("dumped")
 		zip_db()
 	}
 }

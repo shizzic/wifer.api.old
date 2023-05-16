@@ -19,15 +19,20 @@ import (
 // env
 type Config struct {
 	MONGO_CONNECTION_STRING string
-	SERVER_IP               string
-	CLIENT_DOMAIN           string
-	SELF_DOMAIN_NAME        string
-	ADMIN_EMAIL             string
-	EMAIL                   Email
-	PATH                    string
-	BACKBLAZE_ID            string
-	BACKBLAZE_KEY           string
-	PRODUCT_NAME            string
+
+	SERVER_IP         string
+	CLIENT_DOMAIN     string
+	SELF_DOMAIN_NAME  string
+	ENCRYPT_CERT_FILE string
+	ENCRYPT_KEY_FILE  string
+
+	ADMIN_EMAIL string
+	EMAIL       Email
+	PATH        string
+
+	BACKBLAZE_ID  string
+	BACKBLAZE_KEY string
+	PRODUCT_NAME  string
 }
 
 var config = get_config()
@@ -72,18 +77,23 @@ func get_config() *Config {
 	path, _ := filepath.Abs("./")
 
 	return &Config{
+		PATH:                    path,
 		MONGO_CONNECTION_STRING: os.Getenv("MONGO_CONNECTION_STRING"),
-		SERVER_IP:               os.Getenv("SERVER_IP"),
-		CLIENT_DOMAIN:           os.Getenv("CLIENT_DOMAIN"),
-		SELF_DOMAIN_NAME:        os.Getenv("SELF_DOMAIN_NAME"),
-		ADMIN_EMAIL:             os.Getenv("ADMIN_EMAIL"),
+
+		SERVER_IP:         os.Getenv("SERVER_IP"),
+		CLIENT_DOMAIN:     os.Getenv("CLIENT_DOMAIN"),
+		SELF_DOMAIN_NAME:  os.Getenv("SELF_DOMAIN_NAME"),
+		ENCRYPT_CERT_FILE: os.Getenv("ENCRYPT_CERT_FILE"),
+		ENCRYPT_KEY_FILE:  os.Getenv("ENCRYPT_KEY_FILE"),
+
+		ADMIN_EMAIL: os.Getenv("ADMIN_EMAIL"),
 		EMAIL: Email{
 			HOST:     os.Getenv("EMAIL_HOST"),
 			USERNAME: os.Getenv("EMAIL_USERNAME"),
 			PASSWORD: os.Getenv("EMAIL_PASSWORD"),
 			PORT:     port,
 		},
-		PATH:          path,
+
 		BACKBLAZE_ID:  os.Getenv("BACKBLAZE_ID"),
 		BACKBLAZE_KEY: os.Getenv("BACKBLAZE_KEY"),
 		PRODUCT_NAME:  os.Getenv("PRODUCT_NAME"),
@@ -140,8 +150,8 @@ func setHeaders() {
 func run() {
 	if gin.Mode() == "release" {
 		router.Use(redirect()) // bind endless redirect for NONE https requests
-		go r.RunTLS(config.SERVER_IP+":443", "/etc/ssl/wifer/__wifer-test_ru.full.crt", "/etc/ssl/wifer/__wifer-test_ru.key")
-		router.Run(config.SERVER_IP + ":80")
+		go r.RunTLS(config.SERVER_IP+":444", config.ENCRYPT_CERT_FILE, config.ENCRYPT_KEY_FILE)
+		router.Run(config.SERVER_IP + ":81")
 	} else {
 		r.Run(config.SERVER_IP + ":80")
 	}
